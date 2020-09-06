@@ -181,6 +181,69 @@ def inject_nan_acc(data_col, p_nan=1, p_acc=1):
 
 
 def inject_nan_acc3(data_col, p_nan=1, p_acc=1):
+    nan_count = count_nan_len(data_col)
+    nan_list = np.unique(nan_count, return_counts=True)
+
+    n_inj_list = nan_list[1][0:3] * p_nan
+    n1, n2, n3 = int(n_inj_list[0]), int(n_inj_list[1]), int(n_inj_list[2])
+    n_inj_sum = n1 + n2 + n3
+    n1, n2, n3 = 0, 0, n_inj_sum
+
+    # nan, bf, af 아닌 인덱스만 뽑아낸 list를 만들고
+    # 그 list의 index로 랜덤샘플링
+    # 간격 최소4 이어야 하니까 list의 index를 /4 해서 랜덤으로 뽑고 거기에 3을 곱해주면 되겟죵
+    nan_bool = chk_nan_bfaf(data_col)
+    candidates = np.array(np.where(nan_bool.values == 0))
+
+    random.seed(0)
+    rand = random.sample(range(1, int(len(candidates[0])/4)), k=n_inj_sum)
+    rand_rev = [4 * i for i in rand]
+    idx_inj = list(candidates[0][rand_rev])
+    idx_inj.sort()
+
+    random.seed(1)
+    idx_acc = random.sample(idx_inj, k=int(n_inj_sum * p_acc))
+    idx_acc = [i - 1 for i in idx_acc]
+    idx_acc.sort()
+
+    idx_a = pd.DataFrame([i-1 for i in idx_inj])
+    idx_b = idx_a.isin(idx_acc)
+    idx_nor = idx_a[idx_b == False].dropna()
+    idx_nor = list(idx_nor.values.reshape([len(idx_nor), ]).astype('int'))
+
+    len_list = np.ones(n1)
+    len_list = np.append(len_list, np.ones(n2) * 2)
+    len_list = np.append(len_list, np.ones(n3) * 3)
+    random.seed(2)
+    random.shuffle(len_list)
+
+    inj_mask = nan_bool.copy()
+    inj_mask = inj_mask['nan']
+    for i in range(len(idx_inj)):
+        idx = int(idx_inj[i])
+        l_nan = int(len_list[i])
+        inj_mask[idx:idx+l_nan] = 2
+    inj_mask[idx_nor] = 3
+    inj_mask[idx_acc] = 4
+
+    injected = data_col.copy()
+    s, k = 0, 0
+    for j in range(len(inj_mask)):
+        if inj_mask[j] == 4:
+            while inj_mask[j+k] > 1:
+                s += injected[j+k]
+                k += 1
+            injected[j] = s
+            s = 0
+            k = 0
+    injected[inj_mask == 2] = np.nan
+
+    print(f'# of injected NaN = {len(idx_inj)}')
+    print(f'# of injected acc = {len(idx_acc)}      ** DONE')
+    return injected, inj_mask
+
+
+def inject_nan_acc3_rev(data_col, p_nan=1, p_acc=1):
     n_len_max = 3
     nan_count = count_nan_len(data_col)
     nan_list = np.unique(nan_count, return_counts=True)

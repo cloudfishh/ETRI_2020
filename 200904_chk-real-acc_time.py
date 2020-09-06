@@ -1,7 +1,21 @@
+"""
+Analyze the real accumulation
+ - classify the value before NaNs by mean and sigma from same time points
+2020. 09. 05. Sat.
+Soyeong Park
+"""
+"""
+1. 데이터 로드, nan 유무 저장
+2. before 유무 저장, nan length 저장
+3. before이면 해당 value의 시간대 앞뒤 1달치 mean & sigma detection
+ps. 그냥 check accumulation function 적용하면 될 것 같은데...?
+"""
 from funcs import *
 from matplotlib import pyplot as plt
 
 
+##############################
+# 1. 데이터 로드, nan 유무 저장
 test_house = '68181c16'
 
 data_raw = load_labeled()
@@ -10,117 +24,114 @@ data_col = data[test_house]
 
 idx_nan = np.where(np.isnan(data_col.values) == True)[0]
 
-df = pd.DataFrame([])
+df = pd.DataFrame([],
+                  index=pd.DatetimeIndex(data_col.index),
+                  columns=['values', 'nan', 'nan_bfaf', 'candidate', 'nan_len', 'result', 'mean', 'std', 'sample_len', 'z-score'])
 df['values'] = data_col.copy()
 df['nan'] = np.isnan(data_col.values)
+df['nan_bfaf'] = chk_nan_bfaf(data_col)
 
 
+##############################
+# 2. candidate = before유무, nan_len = nan 길이
 num = 0
-num_col, val_col = [], []
+cand, nan_len = np.zeros(df.shape[0]), np.zeros(df.shape[0])
 for i in range(df.shape[0]):
     if df['nan'][i] == True:
         num += 1
     elif (df['nan'][i] == False) & (num != 0):
-        val_col.append(df['values'][i-num-1])
-        num_col.append(num)
+        cand[i-num-1] = 1
+        nan_len[i-num-1] = num
         num = 0
+df['candidate'] = cand
+df['nan_len'] = nan_len
 
-mask_valid = np.invert(chk_nan_bfaf(data_col).values.astype('bool').reshape(data_col.shape))
-val_valid = data_col.values[mask_valid]
-num_valid = np.zeros(val_valid.shape)
 
-val_col = np.array(val_col)
-num_col = np.array(num_col)
-
-val_col = np.append(val_col, val_valid)
-num_col = np.append(num_col, num_valid)
-
-plot_df = pd.DataFrame([])
-plot_df['num'] = num_col
-plot_df['val'] = val_col
-plot_df = plot_df.sort_values(['num', 'val'])
-
-plot_mean = pd.DataFrame([])
-plot_mean['num'] = np.arange(26)
-plot_mean['val'] = (np.arange(26)+1) * plot_df['val'][plot_df['num'] == 0].values.mean()
-
-plot_hor = pd.DataFrame([])
-plot_hor['num'] = np.arange(26)
-plot_hor['val'] = np.ones(26) * plot_df['val'][plot_df['num'] == 0].values.mean()
+# b = pd.DataFrame([])
+# b['idx'] = np.where(df['nan']==1)[0].astype('int')
+# b['time'] = df.index[b['idx'].values]
 
 
 ##############################
+# 3. candidate == 1이면 해당 시간대 mean/sigma 찾아서 유무 판별
+result, mean, std, sample_len = np.zeros(df.shape[0]), np.zeros(df.shape[0]), np.zeros(df.shape[0]), np.zeros(df.shape[0])
+for idx in np.where(df['candidate'] == 1)[0]:
+    if idx < 30*24:
+        temp = df.iloc[:idx+30*24]
+    elif idx > df.shape[0]-30*24:
+        temp = df.iloc[idx-30*24:]
+    else:
+        temp = df.iloc[idx-30*24:idx+30*24]
+    ttemp = temp['values'][(temp['nan_bfaf']==0)&(temp.index.hour==df.index[idx].hour)]
+    m, s = ttemp.mean(), ttemp.std()
+    # m = temp['values'][np.where(temp['nan_bfaf']==0)[0]].mean()
+    # s = temp['values'][np.where(temp['nan_bfaf']==0)[0]].std()
+    # if not m-3*s < df['values'][idx] < m+3*s:
+    if not df['values'][idx] < m+3*s:
+        result[idx], mean[idx], std[idx], sample_len[idx] = 1, m, s, ttemp.shape[0]
+df['result'], df['mean'], df['std'], df['sample_len'] = result, mean, std, sample_len
+
+
+##############################
+# 3 another. adaptive z-score
+result, mean, std, sample_len, z_score = \
+    np.zeros(df.shape[0]), np.zeros(df.shape[0]), np.zeros(df.shape[0]), np.zeros(df.shape[0]), np.zeros(df.shape[0])
+for i in range(df.shape[0]):
+    if np.isnan(df['values'][i]) == False:
+        if i < 30*24:
+            temp = df.iloc[:i+30*24]
+        elif i > df.shape[0]-30*24:
+            temp = df.iloc[i-30*24:]
+        else:
+            temp = df.iloc[i-30*24:i+30*24]
+        ttemp = temp['values'][(temp['nan_bfaf']==0)&(temp.index.hour==df.index[i].hour)]
+        m, s = ttemp.mean(), ttemp.std()
+        z = (df['values'][i]-m)/s
+
+        if not df['values'][i] < m+3*s:
+            result[i], sample_len[i] = 1, ttemp.shape[0]
+    else:
+        z, m, s = np.nan, np.nan, np.nan
+    z_score[i], mean[i], std[i] = z, m, s
+
+
+df['result'], df['mean'], df['std'], df['sample_len'], df['z-score']\
+    = result, mean, std, sample_len, z_score
+
+
+##############################
+# 4. plot
+# 플롯 어케 해야할지?? y축을 standard score로 놓으라고 하셨음.
 plt.figure(figsize=(7.5,5))
-plt.plot(plot_df['num'], plot_df['val'], '.')
-plt.plot(plot_mean['num'], plot_mean['val'], color='tomato', linewidth=1)
-plt.plot(plot_hor['num'], plot_hor['val'], color='seagreen', linewidth=1)
-plt.fill_between(plot_hor['num'],
-                 # plot_mean['val'] - plot_df['val'][plot_df['num'] == 0].values.std()*3,
-                 plot_hor['val'] - plot_df['val'][plot_df['num'] == 0].values.std()*3,
-                 plot_hor['val'] + plot_df['val'][plot_df['num'] == 0].values.std()*3, color='seagreen', alpha=0.2)
-plt.xlim([-1, 25])
-# plt.ylim([-0.2, 3.7])
-# plt.xticks(ticks=[i for i in range(0, 25)])
-plt.xlabel('length of NaNs')
-plt.ylabel('Value (Power [kW])')
-plt.title(f'{test_house}')
-plt.tight_layout()
-plt.savefig(f'D:/PycharmProjects/ETRI_2020/chkrealacc_{loc}_apt{apt}_{test_house}.png')
-plt.close()
 
-
-# # len_NaN=3 까지만 플롯
-# plt.figure()
 # plt.plot(plot_df['num'], plot_df['val'], '.')
 # plt.plot(plot_mean['num'], plot_mean['val'], color='tomato', linewidth=1)
-# plt.xlim([-0.5, 3.5])
-# plt.xticks(ticks=[i for i in range(4)])
+# plt.plot(plot_hor['num'], plot_hor['val'], color='seagreen', linewidth=1)
+# plt.fill_between(plot_hor['num'],
+#                  # plot_mean['val'] - plot_df['val'][plot_df['num'] == 0].values.std()*3,
+#                  plot_hor['val'] - plot_df['val'][plot_df['num'] == 0].values.std()*3,
+#                  plot_hor['val'] + plot_df['val'][plot_df['num'] == 0].values.std()*3, color='seagreen', alpha=0.2)
+# plt.xlim([-1, 25])
+# # plt.ylim([-0.2, 3.7])
+# # plt.xticks(ticks=[i for i in range(0, 25)])
 # plt.xlabel('length of NaNs')
 # plt.ylabel('Value (Power [kW])')
 # plt.title(f'{test_house}')
 # plt.tight_layout()
-#
-#
-# # with boxplot
-# plt.figure()
-# plt.boxplot([plot_df['val'][plot_df['num'] == 0],
-#              plot_df['val'][plot_df['num'] == 1],
-#              plot_df['val'][plot_df['num'] == 2],
-#              plot_df['val'][plot_df['num'] == 3]],
-#             boxprops=dict(alpha=.3),
-#             flierprops=dict(alpha=.3),
-#             medianprops=dict(alpha=.3),
-#             meanprops=dict(alpha=.3),
-#             capprops=dict(alpha=.3),
-#             whiskerprops=dict(alpha=.3))
-# plt.plot(plot_df['num']+1, plot_df['val'], '.')
-# plt.plot(plot_mean['num']+1, plot_mean['val'], color='tomato', linewidth=1)
-# plt.xticks(ticks=[i for i in range(25)], labels=[i-1 for i in range(25)])
-# # plt.xlim([0.5, 24.5])
-# plt.xlim([0.5, 4.5])
-# plt.ylim([-0.2, 3.7])
-# plt.xlabel('length of NaNs')
-# plt.ylabel('Value (Power [kW])')
-# plt.title(f'{test_house}')
-# plt.tight_layout()
+# # plt.savefig(f'D:/PycharmProjects/ETRI_2020/chkrealacc_{loc}_apt{apt}_{test_house}.png')
+# plt.close()
 
 
 ##############################
 # counting accumulation candidates
-count = dict()
-for i in range(plot_df.shape[0]):
-    if plot_df['val'][i] > plot_hor['val'][0] + plot_df['val'][plot_df['num'] == 0].values.std()*3:
-        try:
-            count[plot_df['num'][i]] += 1
-        except KeyError:
-            count[plot_df['num'][i]] = 1
-
-for keys, values in sorted(count.items()):
-    if keys != 0:
-        print(f'{keys}: {values}')
-
-print(f'{loc} {test_house} total # of values: {sum(plot_df["num"] != 0)}')
-try:
-    print(f'{loc} {test_house} # of checked values: {sum(count.values())-count[0]}\n')
-except KeyError:
-    print(f'{loc} {test_house} # of checked values: {sum(count.values())}\n')
+# count = dict()
+# for i in range(plot_df.shape[0]):
+#     if plot_df['val'][i] > plot_hor['val'][0] + plot_df['val'][plot_df['num'] == 0].values.std()*3:
+#         try:
+#             count[plot_df['num'][i]] += 1
+#         except KeyError:
+#             count[plot_df['num'][i]] = 1
+#
+# for keys, values in sorted(count.items()):
+#     if keys != 0:
+#         print(f'{keys}: {values}')
