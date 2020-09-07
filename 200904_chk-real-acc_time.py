@@ -89,7 +89,7 @@ for i in range(df.shape[0]):
         z = (df['values'][i]-m)/s
 
         if not df['values'][i] < m+3*s:
-            result[i], sample_len[i] = 1, ttemp.shape[0]
+            result[i], sample_len[i] = 1, len(ttemp)
     else:
         z, m, s = np.nan, np.nan, np.nan
     z_score[i], mean[i], std[i] = z, m, s
@@ -98,11 +98,21 @@ for i in range(df.shape[0]):
 df['result'], df['mean'], df['std'], df['sample_len'], df['z-score']\
     = result, mean, std, sample_len, z_score
 
+print(f'    total: {sum(df["candidate"])}')
+print(f'z-score 3: {sum( (df["z-score"]>3)&(df["candidate"]==1) )}')
+print(f'z-score 4: {sum( (df["z-score"]>4)&(df["candidate"]==1) )}')
+
 
 ##############################
 # 4. plot
 # 플롯 어케 해야할지?? y축을 standard score로 놓으라고 하셨음.
 plt.figure(figsize=(7.5,5))
+plt.plot(df['nan_len'], df['z-score'], '.')
+plt.xlim([-1, 25])
+plt.xlabel('length of NaNs')
+plt.ylabel('z-score')
+plt.title(f'{test_house}')
+plt.tight_layout()
 
 # plt.plot(plot_df['num'], plot_df['val'], '.')
 # plt.plot(plot_mean['num'], plot_mean['val'], color='tomato', linewidth=1)
