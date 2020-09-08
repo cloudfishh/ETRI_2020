@@ -1,0 +1,195 @@
+D:\PycharmProjects\TOC_PV\venv\Scripts\Scripts\Scripts\python.exe D:/PycharmProjects/ETRI_2020/temp.py
+Gwangju_0 total: 300.07
+Gwangju_0  chk3: 9.6
+Gwangju_0  mean: 0.03199
+
+Gwangju_1 total: 295.2
+Gwangju_1  chk3: 14.767
+Gwangju_1  mean: 0.050012
+
+Gwangju_2 total: 293.47
+Gwangju_2  chk3: 17.933
+Gwangju_2  mean: 0.061062
+
+Gwangju_3 total: 312.87
+Gwangju_3  chk3: 27.7
+Gwangju_3  mean: 0.087984
+
+Gwangju_4 total: 271.2
+Gwangju_4  chk3: 13.3
+Gwangju_4  mean: 0.049095
+
+Gwangju_5 total: 271.43
+Gwangju_5  chk3: 10.967
+Gwangju_5  mean: 0.040388
+
+Gwangju_6 total: 274.97
+Gwangju_6  chk3: 3.9
+Gwangju_6  mean: 0.014323
+
+Gwangju_7 total: 274.3
+Gwangju_7  chk3: 13.767
+Gwangju_7  mean: 0.050259
+
+Gwangju_8 total: 338.5
+Gwangju_8  chk3: 28.1
+Gwangju_8  mean: 0.082936
+
+Gwangju_9 total: 214.47
+Gwangju_9  chk3: 22.067
+Gwangju_9  mean: 0.10284
+
+Gwangju_10 total: 293.67
+Gwangju_10  chk3: 12.633
+Gwangju_10  mean: 0.043017
+
+Naju_0 total: 396.23
+Naju_0  chk3: 34.5
+Naju_0  mean: 0.087018
+
+Naju_1 total: 334.27
+Naju_1  chk3: 29.467
+Naju_1  mean: 0.088033
+
+Naju_2 total: 331.07
+Naju_2  chk3: 29.133
+Naju_2  mean: 0.087981
+
+Daejeon_0 total: 482.2
+Daejeon_0  chk3: 25.733
+Daejeon_0  mean: 0.053299
+
+Daejeon_1 total: 377.2
+Daejeon_1  chk3: 34.067
+Daejeon_1  mean: 0.087003
+
+Daejeon_2 total: 278.07
+Daejeon_2  chk3: 3.0667
+Daejeon_2  mean: 0.011033
+
+Daejeon_3 total: 375.8
+Daejeon_3  chk3: 32.833
+Daejeon_3  mean: 0.086331
+
+Daejeon_4 total: 374.87
+Daejeon_4  chk3: 15.833
+Daejeon_4  mean: 0.042244
+
+Daejeon_5 total: 350.73
+Daejeon_5  chk3: 17.567
+Daejeon_5  mean: 0.050076
+
+Daejeon_6 total: 398.2
+Daejeon_6  chk3: 33.033
+Daejeon_6  mean: 0.082887
+
+Daejeon_7 total: 148.63
+Daejeon_7  chk3: 3.9333
+Daejeon_7  mean: 0.026912
+
+Daejeon_8 total: 328.97
+Daejeon_8  chk3: 23.233
+Daejeon_8  mean: 0.070608
+
+Daejeon_9 total: 363.1
+Daejeon_9  chk3: 23.467
+Daejeon_9  mean: 0.064384
+
+Seoul_0 total: 212.1
+Seoul_0  chk3: 12.367
+Seoul_0  mean: 0.058319
+
+Seoul_1 total: 271.13
+Seoul_1  chk3: 27.9
+Seoul_1  mean: 0.10285
+
+Seoul_2 total: 237.7
+Seoul_2  chk3: 26.867
+Seoul_2  mean: 0.11296
+
+Seoul_3 total: 217.87
+Seoul_3  chk3: 16.767
+Seoul_3  mean: 0.076889
+
+Seoul_4 total: 315.9
+Seoul_4  chk3: 33.933
+Seoul_4  mean: 0.10707
+
+Seoul_5 total: 284.37
+Seoul_5  chk3: 29.2
+Seoul_5  mean: 0.10261
+
+Seoul_6 total: 277.4
+Seoul_6  chk3: 18.733
+Seoul_6  mean: 0.067492
+
+Seoul_7 total: 246.93
+Seoul_7  chk3: 20.5
+Seoul_7  mean: 0.081924
+
+Seoul_8 total: 269.97
+Seoul_8  chk3: 14.467
+Seoul_8  mean: 0.053594
+
+Seoul_9 total: 293.37
+Seoul_9  chk3: 26.533
+Seoul_9  mean: 0.090245
+
+Incheon_0 total: 298.77
+Incheon_0  chk3: 24.667
+Incheon_0  mean: 0.082595
+
+Incheon_1 total: 355.8
+Incheon_1  chk3: 45.167
+Incheon_1  mean: 0.12771
+
+Incheon_2 total: 239.97
+Incheon_2  chk3: 8.2667
+Incheon_2  mean: 0.053196
+
+Incheon_3 total: 260.17
+Incheon_3  chk3: 6.4
+Incheon_3  mean: 0.023906
+
+Incheon_4 total: 415.13
+Incheon_4  chk3: 76.667
+Incheon_4  mean: 0.18031
+
+Incheon_5 total: 371.67
+Incheon_5  chk3: 51.6
+Incheon_5  mean: 0.13976
+
+Incheon_6 total: 267.4
+Incheon_6  chk3: 11.0
+Incheon_6  mean: 0.041516
+
+Incheon_7 total: 276.17
+Incheon_7  chk3: 11.3
+Incheon_7  mean: 0.041032
+
+Incheon_8 total: 275.23
+Incheon_8  chk3: 6.3333
+Incheon_8  mean: 0.02299
+
+Incheon_9 total: 220.92
+Incheon_9  chk3: 6.0769
+Incheon_9  mean: 0.060907
+
+Incheon_10 total: 293.8
+Incheon_10  chk3: 20.667
+Incheon_10  mean: 0.070651
+
+Incheon_11 total: 315.93
+Incheon_11  chk3: 28.6
+Incheon_11  mean: 0.091671
+
+Incheon_12 total: 256.73
+Incheon_12  chk3: 7.0667
+Incheon_12  mean: 0.035487
+
+Incheon_13 total: 324.53
+Incheon_13  chk3: 29.233
+Incheon_13  mean: 0.090512
+
+
+Process finished with exit code 0
