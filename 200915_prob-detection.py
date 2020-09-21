@@ -4,9 +4,17 @@ Accumulation detection with probabilistic forecast
 2020. 09. 15. Tue.
 Soyeong Park
 """
+##############################
 from funcs import *
+import mxnet as mx
+from gluonts.dataset.common import ListDataset
+from gluonts.model.deepar import DeepAREstimator
+from gluonts.trainer import Trainer
+from gluonts.evaluation.backtest import make_evaluation_predictions
+from gluonts.evaluation import Evaluator
 
 
+##############################
 '''
 1. household 1개 데이터 불러오기
 2. injection 하기
@@ -47,3 +55,26 @@ df['injected'], df['mask_inj'] = inject_nan_acc3(data_col, p_nan=1, p_acc=0.25)
 
 ##############################
 # 3. accumulation detection
+idx_list = np.where((df['mask_inj']==3)|(df['mask_inj']==4))[0]
+
+i = 99
+idx, idx_trn = idx_list[i], idx_list[i]-24*7
+time_trn, time_tst = pd.Timestamp(df.index[idx_trn], freq='1H'), pd.Timestamp(df.index[idx], freq='1H')
+trn = ListDataset([{'start': time_trn, 'target': df['injected'][idx_trn:idx-24]}], freq='1H')
+tst = ListDataset([{'start': time_tst, 'target': df['injected'][idx-24:idx]}], freq='1H')
+estimator = DeepAREstimator(
+    freq='1H',
+    prediction_length=1,
+    context_length=23,
+    num_layers=2,
+    num_cells=40,
+    cell_type='lstm',
+    dropout_rate=0.1,
+    use_feat_dynamic_real=True,
+    # embedding_dimension=20,
+    scaling=True,
+    lags_seq=None,
+    time_features=None,
+    trainer=Trainer(ctx=mx.cpu(0), epochs=5, learning_rate=1E-3, hybridize=True, num_batches_per_epoch=200, ),
+)
+
