@@ -12,7 +12,8 @@ from gluonts.dataset.common import ListDataset
 from gluonts.model.deepar import DeepAREstimator
 from gluonts.trainer import Trainer
 from gluonts.evaluation.backtest import make_evaluation_predictions
-from gluonts.evaluation import Evaluator
+# from gluonts.evaluation import Evaluator
+from matplotlib import pyplot as plt
 
 
 ##############################
@@ -40,7 +41,7 @@ sigma = 4
 
 
 ##############################
-# 1. 데이터 불러오기
+# 1. load dataset
 data_raw = load_labeled()
 data, nan_data = clear_head(data_raw)
 data_col = data[test_house]
@@ -56,19 +57,22 @@ df['injected'], df['mask_inj'] = inject_nan_acc3(data_col, p_nan=1, p_acc=0.25)
 
 ##############################
 # 3. accumulation detection
-# input으로 test point 이전 23 points
-# output으로 test point 1 point
+# 3-1. candidates probabilistic forecast
+# input으로 test point 이전 23 points, output으로 test point 1 point
 # training set으로는? 이전 한 달...? 너무 긴가 이전 2주로 일단.
-
-idx_list = np.where((df['mask_inj']==3)|(df['mask_inj']==4))[0]
-i = 99
+idx_list = np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]
 sample_list = list()
 
 total_time = time.time()
-for i in range(len(idx_list)):
+# for i in range(len(idx_list)):
+for i in range(2):
     idx_target = idx_list[i]
-    idx_trn, idx_tst = idx_target-23-24*7*2, idx_target-23
-    time_trn, time_tst = pd.Timestamp(df.index[idx_trn], freq='1H'), pd.Timestamp(df.index[idx_tst], freq='1H')
+    if idx_target > 24*7*2+24:
+        idx_trn, idx_tst = idx_target-23-24*7*2, idx_target-23
+        time_trn, time_tst = pd.Timestamp(df.index[idx_trn], freq='1H'), pd.Timestamp(df.index[idx_tst], freq='1H')
+    else:
+        idx_trn, idx_tst = idx_target+1, idx_target-23
+        time_trn, time_tst = pd.Timestamp(df.index[idx_trn], freq='1H'), pd.Timestamp(df.index[idx_tst], freq='1H')
 
     trn = ListDataset([{'start': time_trn, 'target': df['injected'][idx_trn:idx_trn+24*7*2]}], freq='1H')
     tst = ListDataset([{'start': time_tst, 'target': df['injected'][idx_tst:idx_tst+24]}], freq='1H')
@@ -102,3 +106,56 @@ for i in range(len(idx_list)):
     sample_list.append(forecasts[0].samples.reshape(1000,))
 
 print(f'***** Total elapsed time {time.time()-total_time} secs')
+pd.DataFrame(sample_list).to_csv('200928_deepar-result.csv')
+
+
+# 3-2. z-score
+prob_sample = pd.read_csv('200928_deepar-result.csv', index_col=0)
+cand = df[(df['mask_inj'] == 3) | (df['mask_inj'] == 4)]
+prob_sample.mean(axis=1)
+prob_sample.std(axis=1)
+z_score = (cand['injected'].values-prob_sample.mean(axis=1))/prob_sample.std(axis=1)
+
+# # # # # should be deleted start
+cand = df[(df['mask_inj'] == 3) | (df['mask_inj'] == 4)]
+z_score = np.random.rand(317,) * 10
+# # # # # should be deleted end
+
+df_z = df.copy()
+df_z['z_score'] = np.nan
+df_z['z_score'][(df['mask_inj'] == 3) | (df['mask_inj'] == 4)] = z_score
+
+
+# 3-3. determine threshold for z-score
+# x-axis) z-score threshold [0, 10], y-axis) # of detected acc.
+detection = list()
+for z in np.arange(0, 10, 0.1):
+    # detected_acc = sum(candidate.values > z)
+    detection.append([z, sum(z_score > z),
+                      sum((cand['mask_inj'] == 3) & (z_score > z)),     # false positive (true nor, detect acc)
+                      sum((cand['mask_inj'] == 4) & (z_score < z))])    # false negative (true acc, detect nor)
+detection = pd.DataFrame(detection, columns=['z-score', 'detected_acc', 'false_positive', 'false_negative'])
+
+plt.figure()
+plt.plot(detection['z-score'], detection['detected_acc'])
+plt.xlabel('z-score threshold')
+plt.ylabel('# of detected acc.')
+plt.tight_layout()
+
+plt.figure()
+plt.plot(detection['z-score'], detection['false_positive'], color='tomato')
+plt.plot(detection['z-score'], detection['false_negative'], color='seagreen')
+plt.legend(['false positive', 'false negative'])
+plt.xlabel('z-score threshold')
+plt.ylabel('# of detection')
+plt.tight_layout()
+
+threshold = 7.4
+
+
+##############################
+# 4. imputation
+idx_detected_nor = np.where(((df_z['mask_inj'] == 3) | (df_z['mask_inj'] == 4)) & (df_z['z_score'] < threshold))[0]
+idx_detected_acc = np.where(((df_z['mask_inj'] == 3) | (df_z['mask_inj'] == 4)) & (df_z['z_score'] > threshold))[0]
+
+

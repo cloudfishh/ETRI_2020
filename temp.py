@@ -30,3 +30,4 @@ if __name__=='__main__':
         data = pd.read_csv(f'{file_dir}/data/{direc}/{csv_list[c]}', index_col=0)
         freq = pd.to_datetime(data.index[1])-pd.to_datetime(data.index[0])
         print(f'{file_dir}/{direc}/{csv_list[c]} ~ shape:{data.shape}, freq:{freq}')
+
