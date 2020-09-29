@@ -378,6 +378,7 @@ def check_accumulation_injected(data_col, inj_mask, calendar, sigma=3):
 
     idx_list = np.array([])
     idx_dict = dict()
+    mean_list = np.array([])
     for i in range(len(candidate)):
         target_value = candidate[i]
         target_day = int(candidate.index[i][8:10])
@@ -413,7 +414,8 @@ def check_accumulation_injected(data_col, inj_mask, calendar, sigma=3):
             idx_temp = data_col.index.get_loc(candidate.index[i])
             idx_list = np.append(idx_list, idx_temp)
             idx_dict[idx_temp] = ma.tolist()
-    return np.unique(idx_list), idx_dict
+        mean_list = np.append(mean_list, m)
+    return np.unique(idx_list), mean_list
 
 
 def inject_nan_imputation(d_col, n_mask, n_len=3):
@@ -531,6 +533,8 @@ def linear_prediction(train_x, train_y, test_x, f_len_fwd, f_len_bwd, n_len=3):
 
     test_e = test_x
     test_ex = test_e[d-f_len_fwd:d+f_len_bwd]
+    test_ex[np.where(test_ex == 0)] = 0.0001
+
     forecast = np.matmul(test_ex, lpc_c)
 
     return forecast, prediction
