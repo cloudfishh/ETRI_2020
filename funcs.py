@@ -418,6 +418,67 @@ def check_accumulation_injected(data_col, inj_mask, calendar, sigma=3):
     return np.unique(idx_list), mean_list
 
 
+def nearest_neighbor(data_col, inj_mask, calendar):
+    # have to check the calendar start point
+    cal_idx = calendar.index.to_frame().astype('str').reset_index(drop=True)
+    str_idx = cal_idx[cal_idx == data_col.index[0]].dropna().index[0]
+    end_idx = cal_idx[cal_idx == data_col.index[-1]].dropna().index[0]
+    cal_rev = calendar.iloc[str_idx:end_idx + 1]
+    cal_rev.index = data_col.index
+
+    # data + nan boolean array + W/N boolean array
+    nan_bool = chk_nan_bfaf(data_col)
+    nan_bool.index, cal_rev.index = data_col.index, data_col.index
+
+    # reshape data vector
+    data_day = data_col.values.reshape([int(data_col.shape[0]/24), -1])
+    data_day = data_day.transpose()
+
+    # get candidates ~ inj_mask==3 & 4
+    candidate = data_col[(inj_mask == 3) | (inj_mask == 4)]
+
+    idx_list = np.array([])
+    idx_dict = dict()
+    mean_list = np.array([])
+    for i in range(len(candidate)):
+        target_value = candidate[i]
+        target_day = int(candidate.index[i][8:10])
+        target_hour = int(candidate.index[i][11:13])
+
+        target_holi = calendar.loc[candidate.index[i]][0]
+
+        if target_holi == 1:
+            target_cal = np.invert(cal_rev.values.astype('bool')).astype('int')
+            mask_temp = np.logical_or(nan_bool.values, target_cal)
+        else:
+            mask_temp = np.logical_or(cal_rev.values, nan_bool.values)
+
+        mask_day = mask_temp.reshape([int(mask_temp.shape[0] / 24), -1])
+        mask_day = mask_day.transpose()
+        mask_day[:, target_day] = True
+
+        if target_day < 30:
+            target_data = data_day[target_hour, :target_day+30]
+            target_mask = mask_day[target_hour, :target_day+30]
+        elif target_day > len(data_col)-30:
+            target_data = data_day[target_hour, target_day-30:]
+            target_mask = mask_day[target_hour, target_day-30:]
+        else:
+            target_data = data_day[target_hour, target_day-30:target_day+30]
+            target_mask = mask_day[target_hour, target_day-30:target_day+30]
+
+        ma = np.ma.masked_array(target_data, mask=target_mask)
+        m = ma.mean()
+        s = ma.std()
+
+        if not (m-sigma*s) < target_value < (m+sigma*s):    # over 3 sigma, check index
+            idx_temp = data_col.index.get_loc(candidate.index[i])
+            idx_list = np.append(idx_list, idx_temp)
+            idx_dict[idx_temp] = ma.tolist()
+        mean_list = np.append(mean_list, m)
+    return np.unique(idx_list), mean_list
+
+
 def inject_nan_imputation(d_col, n_mask, n_len=3):
     # d_col에서 n_len=3인 window를 moving해서 모든 데이터를 출력해주자. output: 2D data, 2D mask
     # forward, backward 각 4일씩 넣을 거니까... 앞 뒤 5주~-5주까지 범위로. -> 이건 그냥 후처리 해주자...
