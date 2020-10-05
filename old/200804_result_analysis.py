@@ -1,7 +1,7 @@
 import pandas as pd
 from matplotlib import pyplot as plt
 
-result = pd.read_csv('csv/AR_imputation_result.csv', header=0, index_col=0)
+result = pd.read_csv('../csv/AR_imputation_result.csv', header=0, index_col=0)
 x_labels = [f'({f_fwd}, {f_bwd})' for f_fwd, f_bwd in zip(result['f_fwd'], result['f_bwd'])]
 
 

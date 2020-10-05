@@ -418,7 +418,7 @@ def check_accumulation_injected(data_col, inj_mask, calendar, sigma=3):
     return np.unique(idx_list), mean_list
 
 
-def nearest_neighbor(data_col, inj_mask, calendar):
+def nearest_neighbor(data_col, nan_mask, idx_target, calendar):
     # have to check the calendar start point
     cal_idx = calendar.index.to_frame().astype('str').reset_index(drop=True)
     str_idx = cal_idx[cal_idx == data_col.index[0]].dropna().index[0]
@@ -426,57 +426,37 @@ def nearest_neighbor(data_col, inj_mask, calendar):
     cal_rev = calendar.iloc[str_idx:end_idx + 1]
     cal_rev.index = data_col.index
 
-    # data + nan boolean array + W/N boolean array
-    nan_bool = chk_nan_bfaf(data_col)
-    nan_bool.index, cal_rev.index = data_col.index, data_col.index
-
     # reshape data vector
     data_day = data_col.values.reshape([int(data_col.shape[0]/24), -1])
     data_day = data_day.transpose()
 
-    # get candidates ~ inj_mask==3 & 4
-    candidate = data_col[(inj_mask == 3) | (inj_mask == 4)]
+    # get the target day/hour/holiday
+    target_timestamp = data_col.index[idx_target]
+    target_day = int(target_timestamp[8:10])
+    target_hour = int(target_timestamp[11:13])
+    target_holi = calendar.loc[target_timestamp][0]
 
-    idx_list = np.array([])
-    idx_dict = dict()
-    mean_list = np.array([])
-    for i in range(len(candidate)):
-        target_value = candidate[i]
-        target_day = int(candidate.index[i][8:10])
-        target_hour = int(candidate.index[i][11:13])
+    if target_holi == 1:
+        target_cal = np.invert(cal_rev.values.astype('bool')).astype('int')
+        mask_temp = np.logical_or(nan_mask.values.reshape(len(data_col), 1), target_cal)
+    else:
+        mask_temp = np.logical_or(cal_rev.values.reshape(len(data_col), 1), nan_mask.values.reshape(len(data_col), 1))
 
-        target_holi = calendar.loc[candidate.index[i]][0]
+    mask_day = mask_temp.reshape([int(mask_temp.shape[0] / 24), -1])
+    mask_day = mask_day.transpose()
+    mask_day[:, target_day] = True
 
-        if target_holi == 1:
-            target_cal = np.invert(cal_rev.values.astype('bool')).astype('int')
-            mask_temp = np.logical_or(nan_bool.values, target_cal)
-        else:
-            mask_temp = np.logical_or(cal_rev.values, nan_bool.values)
-
-        mask_day = mask_temp.reshape([int(mask_temp.shape[0] / 24), -1])
-        mask_day = mask_day.transpose()
-        mask_day[:, target_day] = True
-
-        if target_day < 30:
-            target_data = data_day[target_hour, :target_day+30]
-            target_mask = mask_day[target_hour, :target_day+30]
-        elif target_day > len(data_col)-30:
-            target_data = data_day[target_hour, target_day-30:]
-            target_mask = mask_day[target_hour, target_day-30:]
-        else:
-            target_data = data_day[target_hour, target_day-30:target_day+30]
-            target_mask = mask_day[target_hour, target_day-30:target_day+30]
-
-        ma = np.ma.masked_array(target_data, mask=target_mask)
-        m = ma.mean()
-        s = ma.std()
-
-        if not (m-sigma*s) < target_value < (m+sigma*s):    # over 3 sigma, check index
-            idx_temp = data_col.index.get_loc(candidate.index[i])
-            idx_list = np.append(idx_list, idx_temp)
-            idx_dict[idx_temp] = ma.tolist()
-        mean_list = np.append(mean_list, m)
-    return np.unique(idx_list), mean_list
+    if target_day < 30:
+        target_data = data_day[target_hour, :target_day+30]
+        target_mask = mask_day[target_hour, :target_day+30]
+    elif target_day > len(data_col)-30:
+        target_data = data_day[target_hour, target_day-30:]
+        target_mask = mask_day[target_hour, target_day-30:]
+    else:
+        target_data = data_day[target_hour, target_day-30:target_day+30]
+        target_mask = mask_day[target_hour, target_day-30:target_day+30]
+    ma = np.ma.masked_array(target_data, mask=target_mask)
+    return np.array(ma.tolist()), ma.mean(), ma.std()
 
 
 def inject_nan_imputation(d_col, n_mask, n_len=3):

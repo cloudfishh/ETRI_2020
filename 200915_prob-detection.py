@@ -62,26 +62,37 @@ df['injected'], df['mask_inj'] = inject_nan_acc3(data_col, p_nan=1, p_acc=0.25)
 # 3-1. candidates probabilistic forecast
 # input으로 test point 이전 23 points, output으로 test point 1 point
 # training set으로는? 이전 한 달...? 너무 긴가 이전 2주로 일단.
-
+#
 # idx_list = np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]
 # sample_list = list()
+#
+# len_input = 23+24*6
+# len_train = 24*7*2
 #
 # total_time = time.time()
 # for i in range(len(idx_list)):
 #     idx_target = idx_list[i]
-#     if idx_target > 24*7*2+24:
-#         idx_trn, idx_tst = idx_target-23-24*7*2, idx_target-23
+#     if idx_target > len_input + len_train + 1:
+#         idx_trn, idx_tst = idx_target-len_input-len_train, idx_target-len_input
 #         time_trn, time_tst = pd.Timestamp(df.index[idx_trn], freq='1H'), pd.Timestamp(df.index[idx_tst], freq='1H')
+#         trn = ListDataset([{'start': time_trn, 'target': df['injected'][idx_trn:idx_trn+len_train]}], freq='1H')
+#         tst = ListDataset([{'start': time_tst, 'target': df['injected'][idx_tst:idx_tst+len_input+1]}], freq='1H')
 #     else:
-#         idx_trn, idx_tst = idx_target+1, idx_target-23
-#         time_trn, time_tst = pd.Timestamp(df.index[idx_trn], freq='1H'), pd.Timestamp(df.index[idx_tst], freq='1H')
+#         # 데이터는 리버스로 넣고, timestamp는 정상적으로 넣고.
+#         idx_trn, idx_tst = idx_target+len_input+len_train, idx_target+len_input
+#         time_trn = pd.Timestamp(df.index[idx_target], freq='1H') - pd.Timedelta(value=len_input+len_train, unit='hours')
+#         time_tst = pd.Timestamp(df.index[idx_target], freq='1H') - pd.Timedelta(value=len_input, unit='hours')
+#         # trn = ListDataset([{'start': time_trn, 'target': df['injected'][idx_trn:idx_trn+len_train]}], freq='1H')
+#         # tst = ListDataset([{'start': time_tst, 'target': df['injected'][idx_tst:idx_tst+len_input+1]}], freq='1H')
+#         trn = ListDataset([{'start': time_trn,
+#                             'target': df['injected'][idx_target+len_input+1:idx_target+len_input+len_train+1][::-1]}], freq='1H')
+#         tst = ListDataset([{'start': time_tst,
+#                             'target': df['injected'][idx_target:idx_target+len_input+1][::-1]}], freq='1H')
 #
-#     trn = ListDataset([{'start': time_trn, 'target': df['injected'][idx_trn:idx_trn+24*7*2]}], freq='1H')
-#     tst = ListDataset([{'start': time_tst, 'target': df['injected'][idx_tst:idx_tst+24]}], freq='1H')
 #     estimator = DeepAREstimator(
 #         freq='1H',
 #         prediction_length=1,
-#         context_length=23,
+#         context_length=len_input,
 #         num_layers=2,
 #         num_cells=40,
 #         cell_type='lstm',
