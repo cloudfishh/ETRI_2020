@@ -63,12 +63,12 @@ inj_mask = df['mask_inj'].copy()
 #     mean_list.append(m)
 #     std_list.append(s)
 # smlr_sample = pd.DataFrame(sample_list)
-# smlr_sample.to_csv('201005_smlrdy-result.csv')
+# smlr_sample.to_csv('result_nearest.csv')
 
 
 # 3-2. z-score
-prob_sample = pd.read_csv('200928_deepar-result.csv', index_col=0)
-smlr_sample = pd.read_csv('201005_smlrdy-result.csv', index_col=0)
+prob_sample = pd.read_csv('result_deepar.csv', index_col=0)
+smlr_sample = pd.read_csv('result_nearest.csv', index_col=0)
 cand = df[(df['mask_inj'] == 3) | (df['mask_inj'] == 4)].copy()
 z_score = (cand['injected'].values-smlr_sample.mean(axis=1))/smlr_sample.std(axis=1)
 cand['z_score'] = z_score.values

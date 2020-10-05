@@ -131,7 +131,7 @@ pd.DataFrame(sample_list).to_csv(f'200928_deepar-result_input{len_input}_train{l
 
 
 # # 3-2. z-score
-# prob_sample = pd.read_csv('200928_deepar-result.csv', index_col=0)
+# prob_sample = pd.read_csv('result_deepar.csv', index_col=0)
 # cand = df[(df['mask_inj'] == 3) | (df['mask_inj'] == 4)].copy()
 # z_score = (cand['injected'].values-prob_sample.mean(axis=1))/prob_sample.std(axis=1)
 # cand['z_score'] = z_score.values

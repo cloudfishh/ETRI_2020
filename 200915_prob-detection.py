@@ -119,11 +119,11 @@ df['injected'], df['mask_inj'] = inject_nan_acc3(data_col, p_nan=1, p_acc=0.25)
 #     sample_list.append(forecasts[0].samples.reshape(1000,))
 #
 # print(f'***** Total elapsed time {time.time()-total_time} secs')
-# pd.DataFrame(sample_list).to_csv('200928_deepar-result.csv')
+# pd.DataFrame(sample_list).to_csv('result_deepar.csv')
 
 
 # 3-2. z-score
-prob_sample = pd.read_csv('200928_deepar-result.csv', index_col=0)
+prob_sample = pd.read_csv('result_deepar.csv', index_col=0)
 cand = df[(df['mask_inj'] == 3) | (df['mask_inj'] == 4)].copy()
 z_score = (cand['injected'].values-prob_sample.mean(axis=1))/prob_sample.std(axis=1)
 cand['z_score'] = z_score.values
