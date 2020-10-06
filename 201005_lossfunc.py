@@ -37,7 +37,7 @@ df['nan'] = chk_nan_bfaf(data_col)
 df['injected'], df['mask_inj'] = inject_nan_acc3(data_col, p_nan=1, p_acc=0.25)
 
 # forecast result sample 로드
-method = 'deepar'
+method = 'deepar_separate_4weeks'
 forecast = pd.read_csv(f'result_{method}.csv', index_col=0)
 
 # z-score 구하기
@@ -100,10 +100,14 @@ for thld in np.arange(0, 40, 0.1):
     result.loc[i] = [thld,
                      mean_absolute_error(temp['values'], temp['imp_const']),
                      mean_absolute_error(temp['values'], temp['imp_no'])]
+    i += 1
 
 plt.figure()
 plt.plot(result['thld'], result['MAE'])
 plt.plot(result['thld'], result['MAE_no'])
-plt.legend(['w/ const.', 'w/o const.'])
+plt.legend(['w/ const.', 'w/o const.'], loc='lower right')
 plt.title(f'{method}')
+plt.xlabel('z-score threshold')
+plt.ylabel('total MAE')
+plt.ylim([0.006, 0.0225])
 plt.tight_layout()

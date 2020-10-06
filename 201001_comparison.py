@@ -28,8 +28,6 @@ nearest neighbor method를 z-score 구하는 방식으로 만드는거죠.
 test_house = '68181c16'
 f_fwd, f_bwd = 24, 24
 nan_len = 3
-sigma = 4
-# imputation_acc = True
 
 
 ##############################
@@ -67,10 +65,12 @@ inj_mask = df['mask_inj'].copy()
 
 
 # 3-2. z-score
-prob_sample = pd.read_csv('result_deepar.csv', index_col=0)
+# prob_sample = pd.read_csv('result_deepar.csv', index_col=0)
+prob_sample = pd.read_csv('result_deepar_separate_4weeks.csv', index_col=0)
 smlr_sample = pd.read_csv('result_nearest.csv', index_col=0)
 cand = df[(df['mask_inj'] == 3) | (df['mask_inj'] == 4)].copy()
-z_score = (cand['injected'].values-smlr_sample.mean(axis=1))/smlr_sample.std(axis=1)
+z_score = (cand['injected'].values-prob_sample.mean(axis=1))/prob_sample.std(axis=1)
+# z_score = (cand['injected'].values-smlr_sample.mean(axis=1))/smlr_sample.std(axis=1)
 cand['z_score'] = z_score.values
 
 df_z = df.copy()
@@ -80,7 +80,7 @@ df_z['z_score'][(df['mask_inj'] == 3) | (df['mask_inj'] == 4)] = z_score.values
 # 3-3. determine threshold for z-score
 # x-axis) z-score threshold [0, 10], y-axis) # of detected acc.
 detection = list()
-for z in np.arange(0, 10, 0.1):
+for z in np.arange(0, 40, 0.1):
     # detected_acc = sum(candidate.values > z)
     # detection.append([z, sum(cand['z_score'] > z),
     detection.append([z,
@@ -104,7 +104,8 @@ detection = pd.DataFrame(detection, columns=['z-score', 'detected_acc', 'false_p
 # plt.tight_layout()
 
 
-threshold = 3.4
+threshold = 7.5
+# threshold = 3.4
 idx_detected_nor = np.where(((df_z['mask_inj'] == 3) | (df_z['mask_inj'] == 4)) & (df_z['z_score'] < threshold))[0]
 idx_detected_acc = np.where(((df_z['mask_inj'] == 3) | (df_z['mask_inj'] == 4)) & (df_z['z_score'] > threshold))[0]
 detected = np.zeros(len(data_col))
@@ -273,33 +274,33 @@ print(f'  MAPE {mape(result_true, result_impt)}\n')
 ##############################
 # 5-3. compare the sample distribution
 # for i in range(len(idx_list)):
-prob_stdz = list()
-smlr_stdz = list()
-for i in range(317):
-    prob_stdz.append((prob_sample.iloc[i, :]-prob_sample.iloc[i, :].mean())/prob_sample.iloc[i, :].std())
-    smlr_stdz.append((smlr_sample.iloc[i, :]-smlr_sample.iloc[i, :].mean())/smlr_sample.iloc[i, :].std())
-prob_stdz = pd.DataFrame(prob_stdz)
-smlr_stdz = pd.DataFrame(smlr_stdz)
-
-plt.figure()
-for i in range(50, 150):
-    sns.distplot(prob_stdz.iloc[i, :])
-plt.xlabel('')
-plt.xlim([-5, 5])
-plt.ylim([0, 1.7])
-
-plt.figure()
-for i in range(50, 150):
-    sns.distplot(smlr_stdz.iloc[i, :])
-plt.xlabel('')
-plt.xlim([-5, 5])
-plt.ylim([0, 1.7])
-
-
-plt.figure()
-sns.distplot((prob_sample.iloc[0, :]-prob_sample.iloc[0, :].mean())/prob_sample.iloc[0, :].std())
-sns.distplot(prob_sample.iloc[0, :])
-
-plt.figure()
-sns.distplot((smlr_sample.iloc[0, :]-smlr_sample.iloc[0, :].mean())/smlr_sample.iloc[0, :].std())
-sns.distplot(smlr_sample.iloc[0, :])
+# prob_stdz = list()
+# smlr_stdz = list()
+# for i in range(317):
+#     prob_stdz.append((prob_sample.iloc[i, :]-prob_sample.iloc[i, :].mean())/prob_sample.iloc[i, :].std())
+#     smlr_stdz.append((smlr_sample.iloc[i, :]-smlr_sample.iloc[i, :].mean())/smlr_sample.iloc[i, :].std())
+# prob_stdz = pd.DataFrame(prob_stdz)
+# smlr_stdz = pd.DataFrame(smlr_stdz)
+#
+# plt.figure()
+# for i in range(50, 150):
+#     sns.distplot(prob_stdz.iloc[i, :])
+# plt.xlabel('')
+# plt.xlim([-5, 5])
+# plt.ylim([0, 1.7])
+#
+# plt.figure()
+# for i in range(50, 150):
+#     sns.distplot(smlr_stdz.iloc[i, :])
+# plt.xlabel('')
+# plt.xlim([-5, 5])
+# plt.ylim([0, 1.7])
+#
+#
+# plt.figure()
+# sns.distplot((prob_sample.iloc[0, :]-prob_sample.iloc[0, :].mean())/prob_sample.iloc[0, :].std())
+# sns.distplot(prob_sample.iloc[0, :])
+#
+# plt.figure()
+# sns.distplot((smlr_sample.iloc[0, :]-smlr_sample.iloc[0, :].mean())/smlr_sample.iloc[0, :].std())
+# sns.distplot(smlr_sample.iloc[0, :])
