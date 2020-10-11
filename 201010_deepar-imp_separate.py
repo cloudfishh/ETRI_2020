@@ -95,6 +95,7 @@ df['mask_detected'] = detected
 ##############################
 # 2.5. seperate cases
 df['original_idx'] = np.arange(0, df.shape[0])
+df_original = df.copy()
 df = df[df['holiday'] == 0]        # work
 # df = df[df['holiday'] == 1]   # non-work
 
@@ -109,6 +110,11 @@ len_train = 24*7*4
 total_time = time.time()
 sample_fwd, sample_bwd = list(), list()
 for idx in idx_cand:
+    if df['mask_detected'][idx] == 3:
+        pred_len = nan_len
+    else:
+        pred_len = nan_len+1
+
     trn_fwd, tst_fwd, trn_bwd, tst_bwd = bidirec_dataset_deepar(df, idx, len_unit, len_train)
 
     # forward
@@ -122,7 +128,8 @@ for idx in idx_cand:
         num_samples=1000  # number of sample paths we want for evaluation
     )
     forecast_fwd = list(forecast_it)
-    sample_fwd.append(forecast_fwd[0].samples.transpose())
+    sample_fwd.append(np.append(np.ones((pred_len, 1))*df['original_idx'][idx],
+                                forecast_fwd[0].samples.transpose(), axis=1))
     print(f'*** {idx} index forward forecast end - elapsed time {time.time()-start_time}')
 
     # backward
@@ -135,11 +142,12 @@ for idx in idx_cand:
         num_samples=1000,  # number of sample paths we want for evaluation
     )
     forecast_bwd = list(forecast_it)
-    sample_bwd.append(forecast_bwd[0].samples.transpose()[::-1])    # backward는 거꾸로 다시 뒤집어줘야되죠
-    
-    # MUST DO
-    # append the original index in the sample
+    sample_bwd.append(np.append(np.ones((pred_len, 1))*df['original_idx'][idx],
+                                forecast_bwd[0].samples.transpose()[::-1], axis=1))    # backward는 거꾸로 다시 뒤집어줘야되죠
+
     print(f'*** {idx} index backward forecast end - elapsed time {time.time()-start_time}')
+    pd.DataFrame(forecast_fwd[0].samples.transpose()).to_csv(f'201011_deear_separated_{df["original"][idx]}_fwd.csv')
+    pd.DataFrame(forecast_bwd[0].samples.transpose()[::-1]).to_csv(f'201011_deear_separated_{df["original"][idx]}_bwd.csv')
 print(f'***** COMPLETED - total elasped time {time.time() - total_time}')
 
 
@@ -149,5 +157,5 @@ for s in range(len(sample_fwd)-1):
     sample_fwd_np = np.concatenate((sample_fwd_np, sample_fwd[ss]))
     sample_bwd_np = np.concatenate((sample_bwd_np, sample_bwd[ss]))
 
-pd.DataFrame(sample_fwd_np).to_csv('201011_deepar_fwd.csv')
-pd.DataFrame(sample_bwd_np).to_csv('201011_deepar_bwd.csv')
+pd.DataFrame(sample_fwd_np).to_csv('201011_deepar_separated_fwd.csv')
+pd.DataFrame(sample_bwd_np).to_csv('201011_deepar_separated_bwd.csv')
