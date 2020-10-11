@@ -44,14 +44,6 @@ df['injected'], df['mask_inj'] = inject_nan_acc3(data_col, p_nan=1, p_acc=0.25)
 
 
 ##############################
-# 2.5. sepearte cases
-df['holiday'] = calendar[data_col.index[0]:data_col.index[-1]]
-
-df = df[df['holiday'] == 0]        # work
-# df = df[df['holiday'] == 1]   # non-work
-
-
-##############################
 # 3. get the sample with nearest neighbor method
 idx_list = np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]
 nan_mask = df['nan'].copy()
@@ -97,6 +89,16 @@ detected[idx_detected_acc.astype('int')] = 4
 df['mask_detected'] = detected
 
 
+
+# injection detection done
+# seperate cases with original idx
+##############################
+# 2.5. seperate cases
+df['original_idx'] = np.arange(0, df.shape[0])
+df = df[df['holiday'] == 0]        # work
+# df = df[df['holiday'] == 1]   # non-work
+
+
 ##############################
 # 4. imputation
 idx_cand = np.where((df['mask_inj']==3)|(df['mask_inj']==4))[0]
@@ -106,7 +108,7 @@ len_train = 24*7*4
 
 total_time = time.time()
 sample_fwd, sample_bwd = list(), list()
-for idx in idx_cand[:2]:
+for idx in idx_cand:
     trn_fwd, tst_fwd, trn_bwd, tst_bwd = bidirec_dataset_deepar(df, idx, len_unit, len_train)
 
     # forward
@@ -134,6 +136,9 @@ for idx in idx_cand[:2]:
     )
     forecast_bwd = list(forecast_it)
     sample_bwd.append(forecast_bwd[0].samples.transpose()[::-1])    # backward는 거꾸로 다시 뒤집어줘야되죠
+    
+    # MUST DO
+    # append the original index in the sample
     print(f'*** {idx} index backward forecast end - elapsed time {time.time()-start_time}')
 print(f'***** COMPLETED - total elasped time {time.time() - total_time}')
 
