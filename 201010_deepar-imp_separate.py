@@ -69,17 +69,6 @@ cand['z_score'] = z_score.values
 df['z_score'] = np.nan
 df['z_score'][(df['mask_inj'] == 3) | (df['mask_inj'] == 4)] = z_score.values
 
-# 3-3. determine threshold for z-score
-# x-axis) z-score threshold [0, 10], y-axis) # of detected acc.
-# detection = list()
-# for z in np.arange(0, 40, 0.1):
-#     detection.append([z,
-#                       sum((cand['mask_inj'] == 4) & (cand['z_score'] > z)),
-#                       sum((cand['mask_inj'] == 3) & (cand['z_score'] > z)),     # false positive (true nor, detect acc)
-#                       sum((cand['mask_inj'] == 4) & (cand['z_score'] < z))])    # false negative (true acc, detect nor)
-# detection = pd.DataFrame(detection, columns=['z-score', 'detected_acc', 'false_positive', 'false_negative'])
-
-# threshold = 7.5
 threshold = 3.4
 idx_detected_nor = np.where(((df['mask_inj'] == 3) | (df['mask_inj'] == 4)) & (df['z_score'] < threshold))[0]
 idx_detected_acc = np.where(((df['mask_inj'] == 3) | (df['mask_inj'] == 4)) & (df['z_score'] > threshold))[0]
@@ -87,17 +76,6 @@ detected = np.zeros(len(data_col))
 detected[np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))] = 3
 detected[idx_detected_acc.astype('int')] = 4
 df['mask_detected'] = detected
-
-
-
-# injection detection done
-# seperate cases with original idx
-##############################
-# 2.5. seperate cases
-df['original_idx'] = np.arange(0, df.shape[0])
-df_original = df.copy()
-df = df[df['holiday'] == 0]        # work
-# df = df[df['holiday'] == 1]   # non-work
 
 
 ##############################
