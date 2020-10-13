@@ -83,15 +83,15 @@ df['mask_detected'] = detected
 ##############################
 # 4. imputation
 # 4-0. load deepar samples + append original idx
-# sample_fwd = pd.concat([pd.read_csv('201011_deepar_fwd_1.csv', index_col=0),
-#                         pd.read_csv('201011_deepar_fwd_2.csv', index_col=0)])
-# sample_bwd = pd.concat([pd.read_csv('201011_deepar_bwd_1.csv', index_col=0),
-#                         pd.read_csv('201011_deepar_bwd_2.csv', index_col=0)])
-sample_fwd = pd.concat([pd.read_csv('201011_deepar_separated_holi0_fwd.csv', index_col=0),
-                        pd.read_csv('201011_deepar_separated_holi1_fwd.csv', index_col=0)])
-sample_bwd = pd.concat([pd.read_csv('201011_deepar_separated_holi0_fwd.csv', index_col=0),
-                        pd.read_csv('201011_deepar_separated_holi1_fwd.csv', index_col=0)])
-sample_fwd, sample_bwd = sample_fwd.sort_values(by=['0']), sample_bwd.sort_values(by=['0'])
+sample_fwd = pd.concat([pd.read_csv('201011_deepar_fwd_1.csv', index_col=0),
+                        pd.read_csv('201011_deepar_fwd_2.csv', index_col=0)])
+sample_bwd = pd.concat([pd.read_csv('201011_deepar_bwd_1.csv', index_col=0),
+                        pd.read_csv('201011_deepar_bwd_2.csv', index_col=0)])
+# sample_fwd = pd.concat([pd.read_csv('201011_deepar_separated_holi0_fwd.csv', index_col=0),
+#                         pd.read_csv('201011_deepar_separated_holi1_fwd.csv', index_col=0)])
+# sample_bwd = pd.concat([pd.read_csv('201011_deepar_separated_holi0_fwd.csv', index_col=0),
+#                         pd.read_csv('201011_deepar_separated_holi1_fwd.csv', index_col=0)])
+# sample_fwd, sample_bwd = sample_fwd.sort_values(by=['0']), sample_bwd.sort_values(by=['0'])
 idx_cand = np.where((df['mask_inj']==3)|(df['mask_inj']==4))[0]
 
 idx_list_temp = np.empty([sum(df['mask_detected']==3)*nan_len + sum(df['mask_detected']==4)*(nan_len+1), 1])

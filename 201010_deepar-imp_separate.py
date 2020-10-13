@@ -98,7 +98,7 @@ for idx in idx_cand:
     # forward
     start_time = time.time()
     print(f'*** {idx} index forward forecast start')
-    estimator = model_deepar(len_unit, df['mask_detected'][idx], epochs=1)
+    estimator = model_deepar(len_unit, df['mask_detected'][idx], epochs=10, feature=False)
     predictor = estimator.train(trn_fwd)
     forecast_it, _ = make_evaluation_predictions(
         dataset=tst_fwd,  # test dataset
