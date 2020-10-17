@@ -48,30 +48,33 @@ df['injected'], df['mask_inj'] = inject_nan_acc3(data_col, p_nan=1, p_acc=0.25)
 ##############################
 # 3. get the sample with nearest neighbor method
 idx_list = np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]
-nan_mask = df['nan'].copy()
 
-sample_list, mean_list, std_list = list(), list(), list()
-for i in range(len(idx_list)):
-    idx_target = idx_list[i]
-    sample, m, s = nearest_neighbor(data_col, df['nan'].copy(), idx_target, calendar)
-    sample_list.append(sample)
-    mean_list.append(m)
-    std_list.append(s)
-smlr_sample = pd.DataFrame(sample_list)
+# nan_mask = df['nan'].copy()
+
+# sample_list, mean_list, std_list = list(), list(), list()
+# for i in range(len(idx_list)):
+#     idx_target = idx_list[i]
+#     sample, m, s = nearest_neighbor(data_col, df['nan'].copy(), idx_target, calendar)
+#     sample_list.append(sample)
+#     mean_list.append(m)
+#     std_list.append(s)
+# smlr_sample = pd.DataFrame(sample_list)
 # smlr_sample.to_csv('result_nearest.csv')
 
 
 # 3-2. z-score
-# smlr_sample = pd.read_csv('result_nearest.csv', index_col=0)
+# detect_sample = pd.read_csv('result_deepar.csv', index_col=0)     # DEEPAR
+detect_sample = pd.read_csv('result_nearest.csv', index_col=0)    # NEAREST
 cand = df[(df['mask_inj'] == 3) | (df['mask_inj'] == 4)].copy()
-z_score = (cand['injected'].values-smlr_sample.mean(axis=1))/smlr_sample.std(axis=1)
+z_score = (cand['injected'].values - detect_sample.mean(axis=1)) / detect_sample.std(axis=1)
 cand['z_score'] = z_score.values
 
 # df_z = df.copy()
 df['z_score'] = np.nan
 df['z_score'][(df['mask_inj'] == 3) | (df['mask_inj'] == 4)] = z_score.values
 
-threshold = 3.4
+threshold = 7.5     # DEEPAR
+# threshold = 3.4     # NEAREST
 idx_detected_nor = np.where(((df['mask_inj'] == 3) | (df['mask_inj'] == 4)) & (df['z_score'] < threshold))[0]
 idx_detected_acc = np.where(((df['mask_inj'] == 3) | (df['mask_inj'] == 4)) & (df['z_score'] > threshold))[0]
 detected = np.zeros(len(data_col))

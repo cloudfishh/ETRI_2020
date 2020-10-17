@@ -56,10 +56,10 @@ inj_mask = df['mask_inj'].copy()
 
 
 # 3-2. z-score
-prob_sample = pd.read_csv('result_deepar.csv', index_col=0)
-smlr_sample = pd.read_csv('result_nearest.csv', index_col=0)
+# detect_sample = pd.read_csv('result_deepar.csv', index_col=0)     # DEEPAR
+detect_sample = pd.read_csv('result_nearest.csv', index_col=0)    # NEAREST
 cand = df[(df['mask_inj'] == 3) | (df['mask_inj'] == 4)].copy()
-z_score = (cand['injected'].values-smlr_sample.mean(axis=1))/smlr_sample.std(axis=1)
+z_score = (cand['injected'].values - detect_sample.mean(axis=1)) / detect_sample.std(axis=1)
 cand['z_score'] = z_score.values
 
 df_z = df.copy()
@@ -68,15 +68,15 @@ df_z['z_score'][(df['mask_inj'] == 3) | (df['mask_inj'] == 4)] = z_score.values
 
 # 3-3. determine threshold for z-score
 # x-axis) z-score threshold [0, 10], y-axis) # of detected acc.
-detection = list()
-for z in np.arange(0, 10, 0.1):
-    # detected_acc = sum(candidate.values > z)
-    # detection.append([z, sum(cand['z_score'] > z),
-    detection.append([z,
-                      sum((cand['mask_inj'] == 4) & (cand['z_score'] > z)),
-                      sum((cand['mask_inj'] == 3) & (cand['z_score'] > z)),     # false positive (true nor, detect acc)
-                      sum((cand['mask_inj'] == 4) & (cand['z_score'] < z))])    # false negative (true acc, detect nor)
-detection = pd.DataFrame(detection, columns=['z-score', 'detected_acc', 'false_positive', 'false_negative'])
+# detection = list()
+# for z in np.arange(0, 10, 0.1):
+#     # detected_acc = sum(candidate.values > z)
+#     # detection.append([z, sum(cand['z_score'] > z),
+#     detection.append([z,
+#                       sum((cand['mask_inj'] == 4) & (cand['z_score'] > z)),
+#                       sum((cand['mask_inj'] == 3) & (cand['z_score'] > z)),     # false positive (true nor, detect acc)
+#                       sum((cand['mask_inj'] == 4) & (cand['z_score'] < z))])    # false negative (true acc, detect nor)
+# detection = pd.DataFrame(detection, columns=['z-score', 'detected_acc', 'false_positive', 'false_negative'])
 
 # plt.figure()
 # plt.plot(detection['z-score'], detection['detected_acc'])
@@ -93,7 +93,8 @@ detection = pd.DataFrame(detection, columns=['z-score', 'detected_acc', 'false_p
 # plt.tight_layout()
 
 
-threshold = 3.4
+threshold = 7.5     # DEEPAR
+# threshold = 3.4   # NEAREST
 idx_detected_nor = np.where(((df_z['mask_inj'] == 3) | (df_z['mask_inj'] == 4)) & (df_z['z_score'] < threshold))[0]
 idx_detected_acc = np.where(((df_z['mask_inj'] == 3) | (df_z['mask_inj'] == 4)) & (df_z['z_score'] > threshold))[0]
 detected = np.zeros(len(data_col))
@@ -147,20 +148,22 @@ for idx in idx_detected_acc:
 
 ##############################
 # 5-0. result - prob forecast accuracy
-y_pred_prob = prob_sample.mean(axis=1)
-y_true = cand['values']
-print('Probabilistic forecast mean accuracy')
-print(f'RMSE: {mean_squared_error(y_true, y_pred_prob)**(1/2)}')
-print(f' MSE: {mean_squared_error(y_true, y_pred_prob)}')
-print(f' MAE: {mean_absolute_error(y_true, y_pred_prob)}')
-print(f'MAPE: {mape(y_true, y_pred_prob)}\n')
-
-y_pred_smlr = smlr_sample.mean(axis=1)
-print('Nearest neighbor accuracy')
-print(f'RMSE: {mean_squared_error(y_true, y_pred_smlr)**(1/2)}')
-print(f' MSE: {mean_squared_error(y_true, y_pred_smlr)}')
-print(f' MAE: {mean_absolute_error(y_true, y_pred_smlr)}')
-print(f'MAPE: {mape(y_true, y_pred_prob)}\n')
+# prob_sample = pd.read_csv('result_deepar.csv', index_col=0)     # DEEPAR
+# smlr_sample = pd.read_csv('result_nearest.csv', index_col=0)    # NEAREST
+# y_pred_prob = prob_sample.mean(axis=1)
+# y_true = cand['values']
+# print('Probabilistic forecast mean accuracy')
+# print(f'RMSE: {mean_squared_error(y_true, y_pred_prob)**(1/2)}')
+# print(f' MSE: {mean_squared_error(y_true, y_pred_prob)}')
+# print(f' MAE: {mean_absolute_error(y_true, y_pred_prob)}')
+# print(f'MAPE: {mape(y_true, y_pred_prob)}\n')
+#
+# y_pred_smlr = smlr_sample.mean(axis=1)
+# print('Nearest neighbor accuracy')
+# print(f'RMSE: {mean_squared_error(y_true, y_pred_smlr)**(1/2)}')
+# print(f' MSE: {mean_squared_error(y_true, y_pred_smlr)}')
+# print(f' MAE: {mean_absolute_error(y_true, y_pred_smlr)}')
+# print(f'MAPE: {mape(y_true, y_pred_prob)}\n')
 
 
 ##############################
@@ -286,6 +289,8 @@ print(f'  MAPE {mape(result_true, result_impt)}\n')
 
 ##############################
 # 5-3. compare the sample distribution
+prob_sample = pd.read_csv('result_deepar.csv', index_col=0)     # DEEPAR
+smlr_sample = pd.read_csv('result_nearest.csv', index_col=0)    # NEAREST
 # for i in range(len(idx_list)):
 prob_stdz = list()
 smlr_stdz = list()
