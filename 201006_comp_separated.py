@@ -56,7 +56,7 @@ inj_mask = df['mask_inj'].copy()
 
 
 # 3-2. z-score
-# detect_sample = pd.read_csv('result_deepar.csv', index_col=0)     # DEEPAR
+# detect_sample = pd.read_csv('result_deepar_separate_4weeks.csv', index_col=0)     # DEEPAR
 detect_sample = pd.read_csv('result_nearest.csv', index_col=0)    # NEAREST
 cand = df[(df['mask_inj'] == 3) | (df['mask_inj'] == 4)].copy()
 z_score = (cand['injected'].values - detect_sample.mean(axis=1)) / detect_sample.std(axis=1)
@@ -93,8 +93,8 @@ df_z['z_score'][(df['mask_inj'] == 3) | (df['mask_inj'] == 4)] = z_score.values
 # plt.tight_layout()
 
 
-threshold = 7.5     # DEEPAR
-# threshold = 3.4   # NEAREST
+# threshold = 7.5     # DEEPAR
+threshold = 3.4   # NEAREST
 idx_detected_nor = np.where(((df_z['mask_inj'] == 3) | (df_z['mask_inj'] == 4)) & (df_z['z_score'] < threshold))[0]
 idx_detected_acc = np.where(((df_z['mask_inj'] == 3) | (df_z['mask_inj'] == 4)) & (df_z['z_score'] > threshold))[0]
 detected = np.zeros(len(data_col))
@@ -168,22 +168,22 @@ for idx in idx_detected_acc:
 
 ##############################
 # 5-1. result - detection confusion matrix
-idx_injected = np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]
-idx_real_nor = np.where(df['mask_inj'] == 3)[0]
-idx_real_acc = np.where(df['mask_inj'] == 4)[0]
-
-idx_detected = np.isin(idx_injected, idx_detected_acc)
-idx_real = np.isin(idx_injected, idx_real_acc)
-cm = confusion_matrix(idx_real, idx_detected)
-
-plt.rcParams.update({'font.size': 14})
-plt.figure()
-sns.heatmap(cm, annot=True, fmt='d', annot_kws={'size': 20}, square=True, cmap='Greys',     # 'gist_gray': reverse
-            xticklabels=['normal', 'accumulation'], yticklabels=['normal', 'accumulation'])
-# plt.title(f'{test_house}, nan_length=3, {sigma}'+r'$\sigma$', fontsize=14)
-plt.title(f'{test_house}, nan_length=3, threshold={threshold}', fontsize=14)
-plt.xlabel('Predicted label')
-plt.ylabel('True label')
+# idx_injected = np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]
+# idx_real_nor = np.where(df['mask_inj'] == 3)[0]
+# idx_real_acc = np.where(df['mask_inj'] == 4)[0]
+#
+# idx_detected = np.isin(idx_injected, idx_detected_acc)
+# idx_real = np.isin(idx_injected, idx_real_acc)
+# cm = confusion_matrix(idx_real, idx_detected)
+#
+# plt.rcParams.update({'font.size': 14})
+# plt.figure()
+# sns.heatmap(cm, annot=True, fmt='d', annot_kws={'size': 20}, square=True, cmap='Greys',     # 'gist_gray': reverse
+#             xticklabels=['normal', 'accumulation'], yticklabels=['normal', 'accumulation'])
+# # plt.title(f'{test_house}, nan_length=3, {sigma}'+r'$\sigma$', fontsize=14)
+# plt.title(f'{test_house}, nan_length=3, threshold={threshold}', fontsize=14)
+# plt.xlabel('Predicted label')
+# plt.ylabel('True label')
 
 
 ##############################
@@ -289,36 +289,36 @@ print(f'  MAPE {mape(result_true, result_impt)}\n')
 
 ##############################
 # 5-3. compare the sample distribution
-prob_sample = pd.read_csv('result_deepar.csv', index_col=0)     # DEEPAR
-smlr_sample = pd.read_csv('result_nearest.csv', index_col=0)    # NEAREST
-# for i in range(len(idx_list)):
-prob_stdz = list()
-smlr_stdz = list()
-for i in range(317):
-    prob_stdz.append((prob_sample.iloc[i, :]-prob_sample.iloc[i, :].mean())/prob_sample.iloc[i, :].std())
-    smlr_stdz.append((smlr_sample.iloc[i, :]-smlr_sample.iloc[i, :].mean())/smlr_sample.iloc[i, :].std())
-prob_stdz = pd.DataFrame(prob_stdz)
-smlr_stdz = pd.DataFrame(smlr_stdz)
-
-plt.figure()
-for i in range(50, 150):
-    sns.distplot(prob_stdz.iloc[i, :])
-plt.xlabel('')
-plt.xlim([-5, 5])
-plt.ylim([0, 1.7])
-
-plt.figure()
-for i in range(50, 150):
-    sns.distplot(smlr_stdz.iloc[i, :])
-plt.xlabel('')
-plt.xlim([-5, 5])
-plt.ylim([0, 1.7])
-
-
-plt.figure()
-sns.distplot((prob_sample.iloc[0, :]-prob_sample.iloc[0, :].mean())/prob_sample.iloc[0, :].std())
-sns.distplot(prob_sample.iloc[0, :])
-
-plt.figure()
-sns.distplot((smlr_sample.iloc[0, :]-smlr_sample.iloc[0, :].mean())/smlr_sample.iloc[0, :].std())
-sns.distplot(smlr_sample.iloc[0, :])
+# prob_sample = pd.read_csv('result_deepar.csv', index_col=0)     # DEEPAR
+# smlr_sample = pd.read_csv('result_nearest.csv', index_col=0)    # NEAREST
+# # for i in range(len(idx_list)):
+# prob_stdz = list()
+# smlr_stdz = list()
+# for i in range(317):
+#     prob_stdz.append((prob_sample.iloc[i, :]-prob_sample.iloc[i, :].mean())/prob_sample.iloc[i, :].std())
+#     smlr_stdz.append((smlr_sample.iloc[i, :]-smlr_sample.iloc[i, :].mean())/smlr_sample.iloc[i, :].std())
+# prob_stdz = pd.DataFrame(prob_stdz)
+# smlr_stdz = pd.DataFrame(smlr_stdz)
+#
+# plt.figure()
+# for i in range(50, 150):
+#     sns.distplot(prob_stdz.iloc[i, :])
+# plt.xlabel('')
+# plt.xlim([-5, 5])
+# plt.ylim([0, 1.7])
+#
+# plt.figure()
+# for i in range(50, 150):
+#     sns.distplot(smlr_stdz.iloc[i, :])
+# plt.xlabel('')
+# plt.xlim([-5, 5])
+# plt.ylim([0, 1.7])
+#
+#
+# plt.figure()
+# sns.distplot((prob_sample.iloc[0, :]-prob_sample.iloc[0, :].mean())/prob_sample.iloc[0, :].std())
+# sns.distplot(prob_sample.iloc[0, :])
+#
+# plt.figure()
+# sns.distplot((smlr_sample.iloc[0, :]-smlr_sample.iloc[0, :].mean())/smlr_sample.iloc[0, :].std())
+# sns.distplot(smlr_sample.iloc[0, :])
