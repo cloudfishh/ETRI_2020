@@ -63,8 +63,8 @@ idx_list = np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]
 
 
 # 3-2. z-score
-# detect_sample = pd.read_csv('result_deepar.csv', index_col=0)     # DEEPAR
-detect_sample = pd.read_csv('result_nearest.csv', index_col=0)    # NEAREST
+detect_sample = pd.read_csv('result_deepar_separate_4weeks.csv', index_col=0)     # DEEPAR
+# detect_sample = pd.read_csv('result_nearest.csv', index_col=0)    # NEAREST
 cand = df[(df['mask_inj'] == 3) | (df['mask_inj'] == 4)].copy()
 z_score = (cand['injected'].values - detect_sample.mean(axis=1)) / detect_sample.std(axis=1)
 cand['z_score'] = z_score.values

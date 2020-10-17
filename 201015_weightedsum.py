@@ -59,7 +59,7 @@ idx_list = np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]
 
 
 # 3-2. z-score
-# detect_sample = pd.read_csv('result_deepar.csv', index_col=0)     # DEEPAR
+# detect_sample = pd.read_csv('result_deepar_separate_4weeks.csv', index_col=0)     # DEEPAR
 detect_sample = pd.read_csv('result_nearest.csv', index_col=0)    # NEAREST
 cand = df[(df['mask_inj'] == 3) | (df['mask_inj'] == 4)].copy()
 z_score = (cand['injected'].values - detect_sample.mean(axis=1)) / detect_sample.std(axis=1)
@@ -69,8 +69,8 @@ cand['z_score'] = z_score.values
 df['z_score'] = np.nan
 df['z_score'][(df['mask_inj'] == 3) | (df['mask_inj'] == 4)] = z_score.values
 
-threshold = 7.5     # DEEPAR
-# threshold = 3.4     # NEAREST
+# threshold = 7.5     # DEEPAR
+threshold = 3.4     # NEAREST
 idx_detected_nor = np.where(((df['mask_inj'] == 3) | (df['mask_inj'] == 4)) & (df['z_score'] < threshold))[0]
 idx_detected_acc = np.where(((df['mask_inj'] == 3) | (df['mask_inj'] == 4)) & (df['z_score'] > threshold))[0]
 detected = np.zeros(len(data_col))
@@ -119,6 +119,8 @@ sample_bwd = np.append(idx_list_temp, sample_bwd.values, axis=1)
 # 에러 테스트로 최적의 weight 구하기
 # pseudo-inverse 문제라고
 # 일단 1/0.5/0 정도로 적용해보기
+# w_nor = np.array([[1, 0.5, 0], [0, 0.5, 1]])
+# w_acc = np.array([[1, 2/3, 1/3, 0], [0, 1/3, 2/3, 1]])
 w_nor = np.array([[1, 0.5, 0], [0, 0.5, 1]])
 w_acc = np.array([[1, 0.5, 0.5, 0], [0, 0.5, 0.5, 1]])
 # w_nor = np.array([[0.5, 0.5, 0.5], [0.5, 0.5, 0.5]])
@@ -153,22 +155,22 @@ for idx in idx_cand:
 
 ##############################
 # 5-1. result - detection confusion matrix
-idx_injected = np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]
-idx_real_nor = np.where(df['mask_inj'] == 3)[0]
-idx_real_acc = np.where(df['mask_inj'] == 4)[0]
-
-idx_detected = np.isin(idx_injected, idx_detected_acc)
-idx_real = np.isin(idx_injected, idx_real_acc)
-cm = confusion_matrix(idx_real, idx_detected)
-
-plt.rcParams.update({'font.size': 14})
-plt.figure()
-sns.heatmap(cm, annot=True, fmt='d', annot_kws={'size': 20}, square=True, cmap='Greys',     # 'gist_gray': reverse
-            xticklabels=['normal', 'accumulation'], yticklabels=['normal', 'accumulation'])
-# plt.title(f'{test_house}, nan_length=3, {sigma}'+r'$\sigma$', fontsize=14)
-plt.title(f'{test_house}, nan_length=3, threshold={threshold}', fontsize=14)
-plt.xlabel('Predicted label')
-plt.ylabel('True label')
+# idx_injected = np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]
+# idx_real_nor = np.where(df['mask_inj'] == 3)[0]
+# idx_real_acc = np.where(df['mask_inj'] == 4)[0]
+#
+# idx_detected = np.isin(idx_injected, idx_detected_acc)
+# idx_real = np.isin(idx_injected, idx_real_acc)
+# cm = confusion_matrix(idx_real, idx_detected)
+#
+# plt.rcParams.update({'font.size': 14})
+# plt.figure()
+# sns.heatmap(cm, annot=True, fmt='d', annot_kws={'size': 20}, square=True, cmap='Greys',     # 'gist_gray': reverse
+#             xticklabels=['normal', 'accumulation'], yticklabels=['normal', 'accumulation'])
+# # plt.title(f'{test_house}, nan_length=3, {sigma}'+r'$\sigma$', fontsize=14)
+# plt.title(f'{test_house}, nan_length=3, threshold={threshold}', fontsize=14)
+# plt.xlabel('Predicted label')
+# plt.ylabel('True label')
 
 
 ##############################
