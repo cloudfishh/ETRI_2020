@@ -259,6 +259,31 @@ print(f'  RMSE {mean_squared_error(result_true, result_impt)**(1/2)}')
 print(f'  MAPE {mape(result_true, result_impt)}\n')
 
 
+# (5) total accuracy
+result_true, result_impt = [], []
+for idx in np.where((df['mask_inj']==3)|(df['mask_inj']==4))[0]:
+    result_true.append(df['values'][idx:idx+4])
+    result_impt.append(df['imp_const'][idx:idx+4])
+result_true = np.array(result_true)
+result_impt = np.array(result_impt)
+print('5-1. total accuracy - w/ const.')
+print(f'   MAE {mean_absolute_error(result_true, result_impt)}')
+print(f'  RMSE {mean_squared_error(result_true, result_impt)**(1/2)}')
+print(f'  MAPE {mape(result_true, result_impt)}\n')
+
+result_true, result_impt = [], []
+for idx in np.where((df['mask_inj']==3)|(df['mask_inj']==4))[0]:
+    result_true.append(df['values'][idx:idx+4])
+    result_impt.append(df['imp_no-const'][idx:idx+4])
+result_true = np.array(result_true)
+result_impt = np.array(result_impt)
+print('5-2. total accuracy - w/o const.')
+print(f'   MAE {mean_absolute_error(result_true, result_impt)}')
+print(f'  RMSE {mean_squared_error(result_true, result_impt)**(1/2)}')
+print(f'  MAPE {mape(result_true, result_impt)}\n')
+
+
+
 ##############################
 # 5-3. compare the sample distribution
 # for i in range(len(idx_list)):

@@ -83,17 +83,13 @@ df['mask_detected'] = detected
 ##############################
 # 4. imputation
 # 4-0. load deepar samples + append original idx
+idx_cand = np.where((df['mask_inj']==3)|(df['mask_inj']==4))[0]
+
+# choose one: applied holiday feature
 sample_fwd = pd.concat([pd.read_csv('201011_deepar_fwd_1.csv', index_col=0),
                         pd.read_csv('201011_deepar_fwd_2.csv', index_col=0)])
 sample_bwd = pd.concat([pd.read_csv('201011_deepar_bwd_1.csv', index_col=0),
                         pd.read_csv('201011_deepar_bwd_2.csv', index_col=0)])
-# sample_fwd = pd.concat([pd.read_csv('201011_deepar_separated_holi0_fwd.csv', index_col=0),
-#                         pd.read_csv('201011_deepar_separated_holi1_fwd.csv', index_col=0)])
-# sample_bwd = pd.concat([pd.read_csv('201011_deepar_separated_holi0_fwd.csv', index_col=0),
-#                         pd.read_csv('201011_deepar_separated_holi1_fwd.csv', index_col=0)])
-# sample_fwd, sample_bwd = sample_fwd.sort_values(by=['0']), sample_bwd.sort_values(by=['0'])
-idx_cand = np.where((df['mask_inj']==3)|(df['mask_inj']==4))[0]
-
 idx_list_temp = np.empty([sum(df['mask_detected']==3)*nan_len + sum(df['mask_detected']==4)*(nan_len+1), 1])
 i = 0
 for idx in idx_cand:
@@ -103,6 +99,14 @@ for idx in idx_cand:
 sample_fwd = np.append(idx_list_temp, sample_fwd.values, axis=1)
 sample_bwd = np.append(idx_list_temp, sample_bwd.values, axis=1)
 
+
+# choose one: separated W/N sequences
+# sample_fwd = pd.concat([pd.read_csv('201011_deepar_separated_holi0_fwd.csv', index_col=0),
+#                         pd.read_csv('201011_deepar_separated_holi1_fwd.csv', index_col=0)])
+# sample_bwd = pd.concat([pd.read_csv('201011_deepar_separated_holi0_bwd.csv', index_col=0),
+#                         pd.read_csv('201011_deepar_separated_holi1_bwd.csv', index_col=0)])
+# sample_fwd, sample_bwd = sample_fwd.sort_values(by=['0']), sample_bwd.sort_values(by=['0'])
+# sample_fwd, sample_bwd = sample_fwd.values, sample_bwd.values
 
 df['imp_const'] = df['injected'].copy()
 df['imp_no-const'] = df['injected'].copy()
@@ -121,7 +125,7 @@ for idx in idx_cand:
         df['imp_const'][idx:idx+4] = r*((sample_fwd[i:i+pred_len,1:].mean(axis=1) + sample_bwd[i:i+pred_len,1:].mean(axis=1)) / 2)
         # 4-2. w/o const.
         pred_len = nan_len
-        df['imp_no-const'][idx+1:idx+4] = (sample_fwd[i:i+pred_len,1:].mean(axis=1) + sample_bwd[i:i+pred_len,1:].mean(axis=1)) / 2
+        df['imp_no-const'][idx+1:idx+4] = (sample_fwd[i+1:i+1+pred_len,1:].mean(axis=1) + sample_bwd[i+1:i+1+pred_len,1:].mean(axis=1)) / 2
         i += (nan_len+1)
 
 
@@ -239,3 +243,49 @@ print(f'   MAE {mean_absolute_error(result_true, result_impt)}')
 print(f'  RMSE {mean_squared_error(result_true, result_impt)**(1/2)}')
 print(f'  MAPE {mape(result_true, result_impt)}\n')
 
+
+# (5) total accuracy
+result_true, result_impt = [], []
+for idx in np.where((df['mask_inj']==3)|(df['mask_inj']==4))[0]:
+    result_true.append(df['values'][idx:idx+4])
+    result_impt.append(df['imp_const'][idx:idx+4])
+result_true = np.array(result_true)
+result_impt = np.array(result_impt)
+print('5-1. total accuracy - w/ const.')
+print(f'   MAE {mean_absolute_error(result_true, result_impt)}')
+print(f'  RMSE {mean_squared_error(result_true, result_impt)**(1/2)}')
+print(f'  MAPE {mape(result_true, result_impt)}\n')
+
+result_true, result_impt = [], []
+for idx in np.where((df['mask_inj']==3)|(df['mask_inj']==4))[0]:
+    result_true.append(df['values'][idx:idx+4])
+    result_impt.append(df['imp_no-const'][idx:idx+4])
+result_true = np.array(result_true)
+result_impt = np.array(result_impt)
+print('5-2. total accuracy - w/o const.')
+print(f'   MAE {mean_absolute_error(result_true, result_impt)}')
+print(f'  RMSE {mean_squared_error(result_true, result_impt)**(1/2)}')
+print(f'  MAPE {mape(result_true, result_impt)}\n')
+
+
+# 애초에 그냥 그 포인트들 accuracy를 구해보자.
+y_true = df[(df['mask_inj'] == 2) | (df['mask_detected'] == 4)]['values']
+y_pred_fwd = sample_fwd[:, 1:].mean(axis=1)
+y_pred_bwd = sample_bwd[:, 1:].mean(axis=1)
+y_pred_nns = df[(df['mask_inj'] == 2) | (df['mask_detected'] == 4)]['imp_const']
+y_pred_nnsno = df[df['mask_inj'] == 2]['imp_no-const']
+print('accuracy linear - w/ const')
+print(f'   MAE {mean_absolute_error(y_true, y_pred_nns)}')
+print(f'  RMSE {mean_squared_error(y_true, y_pred_nns)**(1/2)}\n')
+print('accuracy linear - w/o const')
+print(f'   MAE {mean_absolute_error(df[df["mask_inj"] == 2]["values"], y_pred_nnsno)}')
+print(f'  RMSE {mean_squared_error(df[df["mask_inj"] == 2]["values"], y_pred_nnsno)**(1/2)}\n')
+print('accuracy forward')
+print(f'   MAE {mean_absolute_error(y_true, y_pred_fwd)}')
+print(f'  RMSE {mean_squared_error(y_true, y_pred_fwd)**(1/2)}\n')
+print('accuracy backward')
+print(f'   MAE {mean_absolute_error(y_true, y_pred_bwd)}')
+print(f'  RMSE {mean_squared_error(y_true, y_pred_bwd)**(1/2)}\n')
+print('accuracy average')
+print(f'   MAE {mean_absolute_error(y_true, (y_pred_fwd+y_pred_bwd)/2)}')
+print(f'  RMSE {mean_squared_error(y_true, (y_pred_fwd+y_pred_bwd)/2)**(1/2)}\n')
