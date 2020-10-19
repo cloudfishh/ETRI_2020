@@ -50,7 +50,9 @@ df['injected'], df['mask_inj'] = inject_nan_acc3(data_col, p_nan=1, p_acc=0.25)
 # input으로 test point 이전 23 points, output으로 test point 1 point
 # training set으로는? 이전 한 달...? 너무 긴가 이전 2주로 일단.
 df['holiday'] = calendar[data_col.index[0]:data_col.index[-1]]
+df['org_idx'] = np.arange(0, len(data_col))
 for holi in range(2):
+    print(f'***** detection - holiday {holi} start *****')
     df_temp = df[df['holiday'] == holi]        # work
     # df = df[df['holiday'] == 1]   # non-work
 
@@ -109,10 +111,36 @@ for holi in range(2):
         tss = list(ts_it)
         sample_list.append(forecasts[0].samples.reshape(1000,))
         # pd.DataFrame(forecasts[0].samples.reshape(1000,)).to_csv(f'201005_separate_idx{idx_target}.csv')
+        print(f'***** detection - holiday {holi} end *****')
 
-    print(f'***** Total elapsed time {time.time()-total_time} secs')
+    print(f'***** Total detection elapsed time {time.time()-total_time} secs')
 
     pd.DataFrame(sample_list).to_csv(f'/home/ubuntu/Documents/sypark/2020_ETRI/{test_house}/201017_detection_{test_house}_holiday{holi}.csv')
+
+
+# 3-2. z-score
+# detect_sample = pd.read_csv('result_deepar_separate_4weeks.csv', index_col=0)     # DEEPAR
+# detect_sample = pd.DataFrame(sample_list)
+df_holi0 = df[df['holiday'] == 0]  # work, holi0
+df_holi1 = df[df['holiday'] == 1]  # non-work, holi1
+
+idx_list_holi0 = df_holi0['org_idx'][(df_holi0['mask_inj'] == 3) | (df_holi0['mask_inj'] == 4)]
+idx_list_holi1 = df_holi1['org_idx'][(df_holi1['mask_inj'] == 3) | (df_holi1['mask_inj'] == 4)]
+
+holi0 = pd.read_csv(f'/home/ubuntu/Documents/sypark/2020_ETRI/{test_house}/201017_detection_{test_house}_holiday0.csv', index_col=0)
+holi1 = pd.read_csv(f'/home/ubuntu/Documents/sypark/2020_ETRI/{test_house}/201017_detection_{test_house}_holiday1.csv', index_col=0)
+
+a0, a1 = pd.DataFrame(), pd.DataFrame()
+a0['idx'], a1['idx'] = idx_list_holi0, idx_list_holi1
+
+b0 = pd.concat([a0.reset_index(drop=True), holi0], axis=1, ignore_index=True)
+b1 = pd.concat([a1.reset_index(drop=True), holi1], axis=1, ignore_index=True)
+
+c = pd.concat([b0, b1])
+cc = c.sort_values(by=0)
+idx_list = np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]
+
+cc.drop(columns=[0]).to_csv(f'/home/ubuntu/Documents/sypark/2020_ETRI/{test_house}/201017_detection_{test_house}.csv')
 
 
 ##############################
@@ -124,13 +152,14 @@ len_train = 24*7*4
 
 total_time = time.time()
 sample_fwd, sample_bwd = list(), list()
+print(f'***** imputation start *****')
 for idx in idx_cand:
-    trn_fwd, tst_fwd, trn_bwd, tst_bwd = bidirec_dataset_deepar(df, idx, len_unit, len_train)
+    trn_fwd, tst_fwd, trn_bwd, tst_bwd = bidirec_dataset_deepar_test(df, idx, len_unit, len_train)
 
     # forward
     start_time = time.time()
     print(f'*** {idx} index forward forecast start')
-    estimator = model_deepar(len_unit, df['mask_detected'][idx], feature=True, epochs=1)
+    estimator = model_deepar_test(len_unit, feature=True, epochs=10)
     predictor = estimator.train(trn_fwd)
     forecast_it, _ = make_evaluation_predictions(
         dataset=tst_fwd,  # test dataset
@@ -143,7 +172,7 @@ for idx in idx_cand:
 
     # backward
     print(f'*** {idx} index backward forecast start')
-    estimator = model_deepar(len_unit, df['mask_detected'][idx], feature=True, epochs=10)
+    estimator = model_deepar(len_unit, feature=True, epochs=10)
     predictor = estimator.train(trn_bwd)
     forecast_it, _ = make_evaluation_predictions(
         dataset=tst_bwd,  # test dataset
@@ -156,7 +185,7 @@ for idx in idx_cand:
     pd.DataFrame(forecast_fwd[0].samples.transpose()).to_csv(f'/home/ubuntu/Documents/sypark/2020_ETRI/{test_house}/csv_temp/201017_impt_{idx}_fwd.csv')
     pd.DataFrame(forecast_bwd[0].samples.transpose()[::-1]).to_csv(f'/home/ubuntu/Documents/sypark/2020_ETRI/{test_house}/csv_temp/201017_impt_{idx}_bwd.csv')
 
-print(f'***** COMPLETED - total elasped time {time.time() - total_time}')
+print(f'***** COMPLETED - total imputation elasped time {time.time() - total_time}')
 
 
 sample_fwd_np, sample_bwd_np = np.array(sample_fwd[0]), np.array(sample_bwd[0])

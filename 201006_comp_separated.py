@@ -77,7 +77,7 @@ df_z['z_score'][(df['mask_inj'] == 3) | (df['mask_inj'] == 4)] = z_score.values
 #                       sum((cand['mask_inj'] == 3) & (cand['z_score'] > z)),     # false positive (true nor, detect acc)
 #                       sum((cand['mask_inj'] == 4) & (cand['z_score'] < z))])    # false negative (true acc, detect nor)
 # detection = pd.DataFrame(detection, columns=['z-score', 'detected_acc', 'false_positive', 'false_negative'])
-
+#
 # plt.figure()
 # plt.plot(detection['z-score'], detection['detected_acc'])
 # plt.xlabel('z-score threshold')

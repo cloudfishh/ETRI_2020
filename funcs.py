@@ -705,3 +705,92 @@ def bidirec_dataset_deepar(df, idx, len_unit, len_train):
                                                    df.index[idx_tst_bwd_start]:df.index[idx_tst_bwd_end]][::-1].values.reshape((1,len_unit))}], freq='1H')
 
     return trn_fwd, tst_fwd, trn_bwd, tst_bwd
+
+
+
+def model_deepar_test(len_unit, feature=True, epochs=10):
+    estimator = DeepAREstimator(
+        freq='1H',
+        prediction_length=4,
+        context_length=len_unit-4,
+        num_layers=2,
+        num_cells=40,
+        cell_type='lstm',
+        dropout_rate=0.1,
+        # use_feat_static_cat=feature,
+        # cardinality=[[672]],
+        use_feat_dynamic_real=feature,
+        # embedding_dimension=20,
+        scaling=True,
+        lags_seq=None,
+        time_features=None,
+        trainer=Trainer(ctx=mx.cpu(0), epochs=epochs, learning_rate=1E-3, hybridize=True, num_batches_per_epoch=336, ),
+    )
+    return estimator
+
+
+def bidirec_dataset_deepar_test(df, idx, len_unit, len_train):
+    pred_len = 4
+
+    if idx < len_unit+len_train+1:
+        # backward
+        # idx_trn_bwd_start, idx_trn_bwd_end = idx+len_unit, idx+len_unit+len_train-1
+        # idx_tst_bwd_start, idx_tst_bwd_end = idx, idx+len_unit-1
+        idx_trn_bwd_start, idx_trn_bwd_end = idx+4-pred_len+len_unit, idx+4-pred_len+len_unit+len_train-1
+        idx_tst_bwd_start, idx_tst_bwd_end = idx+4-pred_len, idx+4-pred_len+len_unit-1
+
+        trn_bwd = ListDataset([{'start': df.index[idx_trn_bwd_start],
+                                'target': df['values'][df.index[idx_trn_bwd_start]:df.index[idx_trn_bwd_end]][::-1].values,
+                                'feat_dynamic_real': df['holiday'][
+                                                   df.index[idx_trn_bwd_start]:df.index[idx_trn_bwd_end]][::-1].values.reshape((1,len_train))}], freq='1H')
+        tst_bwd = ListDataset([{'start': df.index[idx_tst_bwd_start],
+                                'target': df['values'][df.index[idx_tst_bwd_start]:df.index[idx_tst_bwd_end]][::-1].values,
+                                'feat_dynamic_real': df['holiday'][
+                                                   df.index[idx_tst_bwd_start]:df.index[idx_tst_bwd_end]][::-1].values.reshape((1,len_unit))}], freq='1H')
+
+        trn_fwd, tst_fwd = trn_bwd, tst_bwd
+
+    elif idx > df.shape[0]-len_unit-len_train-1:
+        # forward
+        idx_trn_fwd_start, idx_trn_fwd_end = idx-len_unit-len_train+pred_len+1, idx-len_unit+pred_len
+        idx_tst_fwd_start, idx_tst_fwd_end = idx-len_unit+pred_len+1, idx+pred_len
+
+        trn_fwd = ListDataset([{'start': df.index[idx_trn_fwd_start],
+                                'target': df['values'][df.index[idx_trn_fwd_start]:df.index[idx_trn_fwd_end]].values,
+                                'feat_dynamic_real': df['holiday'][
+                                                   df.index[idx_trn_fwd_start]:df.index[idx_trn_fwd_end]].values.reshape((1,len_train))}], freq='1H')
+        tst_fwd = ListDataset([{'start': df.index[idx_tst_fwd_start],
+                                'target': df['values'][df.index[idx_tst_fwd_start]:df.index[idx_tst_fwd_end]].values,
+                                'feat_dynamic_real': df['holiday'][
+                                                   df.index[idx_tst_fwd_start]:df.index[idx_tst_fwd_end]].values.reshape((1,len_unit))}], freq='1H')
+
+        trn_bwd, tst_bwd = trn_fwd, tst_fwd
+
+    else:
+        # forward
+        idx_trn_fwd_start, idx_trn_fwd_end = idx-len_unit-len_train+pred_len+1, idx-len_unit+pred_len
+        idx_tst_fwd_start, idx_tst_fwd_end = idx-len_unit+pred_len+1, idx+pred_len
+
+        trn_fwd = ListDataset([{'start': df.index[idx_trn_fwd_start],
+                                'target': df['values'][df.index[idx_trn_fwd_start]:df.index[idx_trn_fwd_end]].values,
+                                'feat_dynamic_real': df['holiday'][
+                                                   df.index[idx_trn_fwd_start]:df.index[idx_trn_fwd_end]].values.reshape((1,len_train))}], freq='1H')
+        tst_fwd = ListDataset([{'start': df.index[idx_tst_fwd_start],
+                                'target': df['values'][df.index[idx_tst_fwd_start]:df.index[idx_tst_fwd_end]].values,
+                                'feat_dynamic_real': df['holiday'][
+                                                   df.index[idx_tst_fwd_start]:df.index[idx_tst_fwd_end]].values.reshape((1,len_unit))}], freq='1H')
+
+        # backward
+        idx_trn_bwd_start, idx_trn_bwd_end = idx+4-pred_len+len_unit, idx+4-pred_len+len_unit+len_train-1
+        idx_tst_bwd_start, idx_tst_bwd_end = idx+4-pred_len, idx+4-pred_len+len_unit-1
+
+        trn_bwd = ListDataset([{'start': df.index[idx_trn_bwd_start],
+                                'target': df['values'][df.index[idx_trn_bwd_start]:df.index[idx_trn_bwd_end]][::-1].values,
+                                'feat_dynamic_real': df['holiday'][
+                                                   df.index[idx_trn_bwd_start]:df.index[idx_trn_bwd_end]][::-1].values.reshape((1,len_train))}], freq='1H')
+        tst_bwd = ListDataset([{'start': df.index[idx_tst_bwd_start],
+                                'target': df['values'][df.index[idx_tst_bwd_start]:df.index[idx_tst_bwd_end]][::-1].values,
+                                'feat_dynamic_real': df['holiday'][
+                                                   df.index[idx_tst_bwd_start]:df.index[idx_tst_bwd_end]][::-1].values.reshape((1,len_unit))}], freq='1H')
+
+    return trn_fwd, tst_fwd, trn_bwd, tst_bwd
