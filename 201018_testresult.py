@@ -60,16 +60,16 @@ for i in range(len(idx_list)):
     std_list.append(s)
 smlr_sample = pd.DataFrame(sample_list)
 
-smlr_sample.to_csv(f'result/201017_detection_nearest_{test_house}.csv')
-prob_sample = pd.read_csv(f'result/201017_detection_{test_house}.csv')
+smlr_sample.to_csv(f'result/{test_house}/201017_detection_nearest_{test_house}.csv')
+prob_sample = pd.read_csv(f'result/{test_house}/201017_detection_{test_house}.csv')
 
 
 # 3-2. z-score
 cand = df[(df['mask_inj'] == 3) | (df['mask_inj'] == 4)].copy()
-method = '201017_detection_nearest'
+method = '201017_detection'
 
 for method in list(['201017_detection', '201017_detection_nearest']):
-    detect_sample = pd.read_csv(f'result/{method}_{test_house}.csv', index_col=0)
+    detect_sample = pd.read_csv(f'result/{test_house}/{method}_{test_house}.csv', index_col=0)
     z_score = (cand['injected'].values - detect_sample.mean(axis=1)) / detect_sample.std(axis=1)
     # df['z_score'] = np.nan
     # df['z_score'][np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]] = z_score.values
@@ -148,7 +148,10 @@ for method in list(['201017_detection', '201017_detection_nearest']):
                                    mean_absolute_error(temp['values'], temp['imp_const']),
                                    mean_absolute_error(temp['values'], temp['imp_no'])]
         i += 1
-    detection_result.to_csv(f'result/201017_{method[7:]}_lossfunc_{test_house}.csv')
+        print(f'threshold: {thld}')
+
+    detection_result.to_csv(f'result/{test_house}/201017_{method[7:]}_lossfunc_{test_house}.csv')
+    detection_result = pd.read_csv(f'result/{test_house}/201017_{method[7:]}_lossfunc_{test_house}.csv', index_col=0)
 
     plt.figure()
     plt.plot(detection_result['thld'], detection_result['MAE'])
@@ -160,17 +163,18 @@ for method in list(['201017_detection', '201017_detection_nearest']):
     plt.ylim([0.006, 0.0225])
     plt.title(f'{test_house}')
     plt.tight_layout()
-    plt.savefig(f'result/201017_{method[7:]}_lossfunc_{test_house}.png')
+    plt.savefig(f'result/{test_house}/201017_{method[7:]}_lossfunc_{test_house}.png')
 
     # threshold = 7.5     # DEEPAR
     # threshold = 3.4   # NEAREST
-    threshold = detection_result['MAE'].min()
-    idx_detected_nor = np.where(((df['mask_inj'] == 3) | (df['mask_inj'] == 4)) & (df['z_score'] < threshold))[0]
-    idx_detected_acc = np.where(((df['mask_inj'] == 3) | (df['mask_inj'] == 4)) & (df['z_score'] > threshold))[0]
-    detected = np.zeros(len(data_col))
-    detected[np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))] = 3
-    detected[idx_detected_acc.astype('int')] = 4
-    df['mask_detected'] = detected
+    threshold = detection_result['thld'][detection_result['MAE']==detection_result['MAE'].min()].values[0]
+
+idx_detected_nor = np.where(((df['mask_inj'] == 3) | (df['mask_inj'] == 4)) & (df['z_score'] < threshold))[0]
+idx_detected_acc = np.where(((df['mask_inj'] == 3) | (df['mask_inj'] == 4)) & (df['z_score'] > threshold))[0]
+detected = np.zeros(len(data_col))
+detected[np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))] = 3
+detected[idx_detected_acc.astype('int')] = 4
+df['mask_detected'] = detected
 
 
 ##############################
@@ -180,18 +184,153 @@ idx_cand = np.where((df['mask_inj']==3)|(df['mask_inj']==4))[0]
 len_unit = 24   # context_length + prediction length
 len_train = 24*7*4
 
-sample_fwd = pd.concat([pd.read_csv(f'result/201017_deepar_{test_house}_fwd_1.csv', index_col=0),
-                        pd.read_csv(f'result/201017_deepar_{test_house}_fwd_2.csv', index_col=0)])
-sample_bwd = pd.concat([pd.read_csv(f'result/201017_deepar_{test_house}_bwd_1.csv', index_col=0),
-                        pd.read_csv(f'result/201017_deepar_{test_house}_bwd_2.csv', index_col=0)])
+# sample_fwd = pd.concat([pd.read_csv(f'result/{test_house}/201017_deepar_{test_house}_fwd_1.csv', index_col=0),
+#                         pd.read_csv(f'result/{test_house}/201017_deepar_{test_house}_fwd_2.csv', index_col=0)])
+# sample_bwd = pd.concat([pd.read_csv(f'result/{test_house}/201017_deepar_{test_house}_bwd_1.csv', index_col=0),
+#                         pd.read_csv(f'result/{test_house}/201017_deepar_{test_house}_bwd_2.csv', index_col=0)])
+#
+# idx_list_temp = np.empty([sum(df['mask_detected']==3)*nan_len + sum(df['mask_detected']==4)*(nan_len+1), 1])
+# i = 0
+# for idx in idx_cand:
+#     pred_len = nan_len if df['mask_detected'][idx]==3 else nan_len+1
+#     idx_list_temp[i:i+pred_len] = np.ones((pred_len,1))*idx
+#     i += pred_len
+# sample_fwd = np.append(idx_list_temp, sample_fwd.values, axis=1)
+# sample_bwd = np.append(idx_list_temp, sample_bwd.values, axis=1)
+#
+# pd.DataFrame(sample_fwd).to_csv(f'result/{test_house}/201017_impt_deepar_fwd.csv')
+# pd.DataFrame(sample_bwd).to_csv(f'result/{test_house}/201017_impt_deepar_bwd.csv')
+
+sample_fwd = pd.read_csv(f'result/{test_house}/201017_impt_deepar_fwd.csv').values
+sample_bwd = pd.read_csv(f'result/{test_house}/201017_impt_deepar_bwd.csv').values
+
+w_nor = np.array([[1, 0.5, 0], [0, 0.5, 1]])
+w_acc = np.array([[1, 2/3, 1/3, 0], [0, 1/3, 2/3, 1]])
 
 
-sample_fwd_np, sample_bwd_np = np.array(sample_fwd[0]), np.array(sample_bwd[0])
-for s in range(len(sample_fwd)-1):
-    ss = s + 1
-    sample_fwd_np = np.concatenate((sample_fwd_np, sample_fwd[ss]))
-    sample_bwd_np = np.concatenate((sample_bwd_np, sample_bwd[ss]))
+# imputation
+df['imp_const'] = df['injected'].copy()
+df['imp_no-const'] = df['injected'].copy()
 
-pd.DataFrame(sample_fwd_np).to_csv(f'/home/ubuntu/Documents/sypark/2020_ETRI/{test_house}/201017_impt_fwd.csv')
-pd.DataFrame(sample_bwd_np).to_csv(f'/home/ubuntu/Documents/sypark/2020_ETRI/{test_house}/201017_impt_bwd.csv')
+i = 0
+for idx in idx_cand:
+    if df['mask_detected'][idx] == 3:  # detected normal
+        pred_len = nan_len
+        df['imp_const'][idx+1:idx+4] = (sample_fwd[i:i+pred_len, 1:].mean(axis=1)*w_nor[0, :]
+                                        + sample_bwd[i:i+pred_len, 1:].mean(axis=1)*w_nor[1, :])
+        df['imp_no-const'][idx+1:idx+4] = (sample_fwd[i:i+pred_len, 1:].mean(axis=1)*w_nor[0, :]
+                                           + sample_bwd[i:i+pred_len, 1:].mean(axis=1)*w_nor[1, :])
+        i += pred_len
+    else:  # detected acc.
+        # 4-1. w/ const.
+        pred_len = nan_len+1
+        r = df['injected'][idx]/sum(sample_fwd[i:i+pred_len, 1:].mean(axis=1)*w_acc[0, :]
+                                    + sample_bwd[i:i+pred_len, 1:].mean(axis=1)*w_acc[1, :])
+        df['imp_const'][idx:idx+4] = r*(sample_fwd[i:i+pred_len, 1:].mean(axis=1)*w_acc[0, :]
+                                        + sample_bwd[i:i+pred_len, 1:].mean(axis=1)*w_acc[1, :])
+        # 4-2. w/o const.
+        pred_len = nan_len
+        df['imp_no-const'][idx+1:idx+4] = (sample_fwd[i+1:i+1+pred_len, 1:].mean(axis=1)*w_nor[0, :]
+                                           + sample_bwd[i+1:i+1+pred_len, 1:].mean(axis=1)*w_nor[1, :])
+        i += (nan_len+1)
+
+
+##############################
+# 5-2. result -  imputation accuracy
+# (1) true normal / predicted normal
+result_true, result_impt = [], []
+for idx in np.where((df['mask_inj']==3)&(df['mask_detected']==3))[0]:
+    result_true.append(df['values'][idx:idx+4])
+    result_impt.append(df['imp_const'][idx:idx+4])
+result_true = np.array(result_true)
+result_impt = np.array(result_impt)
+print('1. true normal / predicted normal')
+print(f'   MAE {mean_absolute_error(result_true, result_impt)}')
+print(f'  RMSE {mean_squared_error(result_true, result_impt)**(1/2)}')
+print(f'  MAPE {mape(result_true, result_impt)}\n')
+
+
+# (2) true normal / predicted acc - 2 cases: w or w/o const.
+result_true, result_impt = [], []
+for idx in np.where((df['mask_inj']==3)&(df['mask_detected']==4))[0]:
+    result_true.append(df['values'][idx:idx+4])
+    result_impt.append(df['imp_const'][idx:idx+4])
+result_true = np.array(result_true)
+result_impt = np.array(result_impt)
+print('2-1. true normal / predicted acc - with const.')
+print(f'   MAE {mean_absolute_error(result_true, result_impt)}')
+print(f'  RMSE {mean_squared_error(result_true, result_impt)**(1/2)}')
+print(f'  MAPE {mape(result_true, result_impt)}\n')
+
+result_true, result_impt = [], []
+for idx in np.where((df['mask_inj']==3)&(df['mask_detected']==4))[0]:
+    result_true.append(df['values'][idx:idx+4])
+    result_impt.append(df['imp_no-const'][idx:idx+4])
+result_true = np.array(result_true)
+result_impt = np.array(result_impt)
+print('2-2. true normal / predicted acc - w/o const.')
+print(f'   MAE {mean_absolute_error(result_true, result_impt)}')
+print(f'  RMSE {mean_squared_error(result_true, result_impt)**(1/2)}')
+print(f'  MAPE {mape(result_true, result_impt)}\n')
+
+
+# (3) true acc / predicted normal
+result_true, result_impt = [], []
+for idx in np.where((df['mask_inj']==4)&(df['mask_detected']==3))[0]:
+    result_true.append(df['values'][idx:idx+4])
+    result_impt.append(df['imp_const'][idx:idx+4])
+result_true = np.array(result_true)
+result_impt = np.array(result_impt)
+print('3. true acc / predicted normal')
+print(f'   MAE {mean_absolute_error(result_true, result_impt)}')
+print(f'  RMSE {mean_squared_error(result_true, result_impt)**(1/2)}')
+print(f'  MAPE {mape(result_true, result_impt)}\n')
+
+
+# (4) true acc / predicted acc - 2 cases: w or w/o const.
+result_true, result_impt = [], []
+for idx in np.where((df['mask_inj']==4)&(df['mask_detected']==4))[0]:
+    result_true.append(df['values'][idx:idx+4])
+    result_impt.append(df['imp_const'][idx:idx+4])
+result_true = np.array(result_true)
+result_impt = np.array(result_impt)
+print('4-1. true acc / predicted acc - with const.')
+print(f'   MAE {mean_absolute_error(result_true, result_impt)}')
+print(f'  RMSE {mean_squared_error(result_true, result_impt)**(1/2)}')
+print(f'  MAPE {mape(result_true, result_impt)}\n')
+
+result_true, result_impt = [], []
+for idx in np.where((df['mask_inj']==4)&(df['mask_detected']==4))[0]:
+    result_true.append(df['values'][idx:idx+4])
+    result_impt.append(df['imp_no-const'][idx:idx+4])
+result_true = np.array(result_true)
+result_impt = np.array(result_impt)
+print('4-2. true acc / predicted acc - w/o const.')
+print(f'   MAE {mean_absolute_error(result_true, result_impt)}')
+print(f'  RMSE {mean_squared_error(result_true, result_impt)**(1/2)}')
+print(f'  MAPE {mape(result_true, result_impt)}\n')
+
+
+# (5) total accuracy
+result_true, result_impt = [], []
+for idx in np.where((df['mask_inj']==3)|(df['mask_inj']==4))[0]:
+    result_true.append(df['values'][idx:idx+4])
+    result_impt.append(df['imp_const'][idx:idx+4])
+result_true = np.array(result_true)
+result_impt = np.array(result_impt)
+print('5-1. total accuracy - w/ const.')
+print(f'   MAE {mean_absolute_error(result_true, result_impt)}')
+print(f'  RMSE {mean_squared_error(result_true, result_impt)**(1/2)}')
+print(f'  MAPE {mape(result_true, result_impt)}\n')
+
+result_true, result_impt = [], []
+for idx in np.where((df['mask_inj']==3)|(df['mask_inj']==4))[0]:
+    result_true.append(df['values'][idx:idx+4])
+    result_impt.append(df['imp_no-const'][idx:idx+4])
+result_true = np.array(result_true)
+result_impt = np.array(result_impt)
+print('5-2. total accuracy - w/o const.')
+print(f'   MAE {mean_absolute_error(result_true, result_impt)}')
+print(f'  RMSE {mean_squared_error(result_true, result_impt)**(1/2)}')
+print(f'  MAPE {mape(result_true, result_impt)}\n')
 
