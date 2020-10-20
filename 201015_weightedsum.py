@@ -119,10 +119,10 @@ sample_bwd = np.append(idx_list_temp, sample_bwd.values, axis=1)
 # 에러 테스트로 최적의 weight 구하기
 # pseudo-inverse 문제라고
 # 일단 1/0.5/0 정도로 적용해보기
-# w_nor = np.array([[1, 0.5, 0], [0, 0.5, 1]])
-# w_acc = np.array([[1, 2/3, 1/3, 0], [0, 1/3, 2/3, 1]])
 w_nor = np.array([[1, 0.5, 0], [0, 0.5, 1]])
-w_acc = np.array([[1, 0.5, 0.5, 0], [0, 0.5, 0.5, 1]])
+w_acc = np.array([[1, 2/3, 1/3, 0], [0, 1/3, 2/3, 1]])
+# w_nor = np.array([[1, 0.5, 0], [0, 0.5, 1]])
+# w_acc = np.array([[1, 0.5, 0.5, 0], [0, 0.5, 0.5, 1]])
 # w_nor = np.array([[0.5, 0.5, 0.5], [0.5, 0.5, 0.5]])
 # w_acc = np.array([[0.5, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5]])
 
