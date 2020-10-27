@@ -50,7 +50,8 @@ def load_apt(dir_data, location, apt):
         load_data = pd.read_csv(f'{dir_data}/SG_data_{location}_비식별화/{apt}.csv', index_col=0)
         load_data = load_data.drop(columns=['Season', 'Weekday'])
     else:
-        load_data = pd.read_csv(f'{dir_data}/label_data.csv')
+        load_data = pd.read_csv(f'{dir_data}/label_data.csv', index_col=0)
+        load_data = load_data.drop(columns=['Season', 'Weekday'])
     return load_data
 
 

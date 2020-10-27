@@ -124,7 +124,7 @@ def accuracy_by_cases(df):
 ##############################
 # 0. parameter setting
 # test_house_list = ['68181c16', '1dcb5feb', '2ac64232', '3b218da6', '6a638b96']
-test_house = '68181c16'
+test_house = '1dcb5feb'
 f_fwd, f_bwd = 24, 24
 nan_len = 3
 
@@ -240,16 +240,21 @@ for method in list(['201017_detection_deepar', '201017_detection_nearest']):
     detection_result.to_csv(f'result/{test_house}/201017_lossfunc_{method[17:]}_{test_house}.csv')
     detection_result = pd.read_csv(f'result/{test_house}/201017_lossfunc_{method[17:]}_{test_house}.csv', index_col=0)
 
-    plt.figure()
+    plt.rcParams.update({'font.size': 14})
+    plt.figure(figsize=(6,4), dpi=400)
     plt.plot(detection_result['thld'], detection_result['MAE'])
     plt.plot(detection_result['thld'], detection_result['MAE_no'])
-    plt.legend(['w/ const.', 'w/o const.'], loc='lower right')
-    plt.title(f'{method}')
-    plt.xlabel('z-score threshold')
+    plt.axvline(x=detection_result['thld'][detection_result['MAE']==detection_result['MAE'].min()].values[0], color='r',
+                linewidth=1, linestyle='--')
+    plt.legend(['w/ const.', 'w/o const.', 'threshold'], loc='lower right')
+    plt.xlabel('z-score')
     plt.ylabel('total MAE')
+    plt.xlim([0, 40])
+    plt.ylim([0.005, 0.03])
     # plt.ylim([0.006, 0.0225])
-    plt.title(f'{test_house}')
+    # plt.title(f'{test_house}')
     plt.tight_layout()
+    plt.savefig('Fig_loss.pdf')
     plt.savefig(f'result/{test_house}/201017_lossfunc_{method[17:]}_{test_house}.png')
 
     # threshold = 7.5     # DEEPAR
@@ -272,14 +277,21 @@ for method in list(['201017_detection_deepar', '201017_detection_nearest']):
     idx_real = np.isin(idx_injected, idx_real_acc)
     cm = confusion_matrix(idx_real, idx_detected)
 
-    plt.rcParams.update({'font.size': 14})
-    plt.figure()
-    sns.heatmap(cm, annot=True, fmt='d', annot_kws={'size': 20}, square=True, cmap='Greys',     # 'gist_gray': reverse
-                xticklabels=['normal', 'accumulation'], yticklabels=['normal', 'accumulation'])
-    plt.title(f'{test_house}, {method[17:]}, nan_length=3, threshold={threshold}', fontsize=14)
+    group_names = ['TN', 'FP', 'FN', 'TP']
+    group_counts = ["{0:0.0f}".format(value) for value in cm.flatten()]
+    cm_label = [f"{v1}\n{v2}" for v1, v2 in zip(group_names, group_counts)]
+    cm_label = np.asarray(cm_label).reshape(2, 2)
+
+    plt.rcParams.update({'font.size': 16})
+    plt.figure(figsize=(4, 4), dpi=400)
+    sns.heatmap(cm, annot=cm_label, fmt='', square=True, cmap='Greys', annot_kws={'size': 15}, # 'gist_gray': reverse
+                xticklabels=['normal', 'anomaly'], yticklabels=['normal', 'anomaly'], cbar=False)
+    # plt.title(f'{test_house}, {method[17:]}, nan_length=3, threshold={threshold}', fontsize=14)
     plt.xlabel('Predicted label')
     plt.ylabel('True label')
-    plt.savefig(f'result/{test_house}/201017_confusion_{method[17:]}_{test_house}.png')
+    plt.tight_layout()
+    plt.savefig('Fig_cm_(a).pdf')
+    # plt.savefig(f'result/{test_house}/201017_confusion_{method[17:]}_{test_house}.png')
 
 
     ##############################

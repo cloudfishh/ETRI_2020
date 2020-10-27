@@ -265,6 +265,7 @@ def inject_nan_acc3(data_col, p_nan=1, p_acc=1):
     return injected, inj_mask
 
 
+
 def inject_nan_acc_nanlen(data_col, n_len=3, p_nan=1, p_acc=0.25):
     n_len_max = n_len
     nan_count = count_nan_len(data_col)
@@ -576,7 +577,7 @@ def inject_nan_imputation(d_col, n_mask, n_len=3):
 def make_bidirectional_input(d_col, n_mask):
     # forward 4주, backward 4주
     # 너무앞 or 너무뒤 or nan 많아서 4주 안 채워지면 그 만큼을 뒤 or 앞에서 더 채워넣음
-    d = 24
+    d = 48
 
     idx_inj = np.array(np.where(n_mask == 2))[0]
     train_x_fwd, train_x_bwd, train_y_temp, test_x_temp = [], [], [], []
@@ -617,7 +618,7 @@ def make_bidirectional_input(d_col, n_mask):
 
 
 def linear_prediction(train_x, train_y, test_x, f_len_fwd, f_len_bwd, n_len=3):
-    d = 24
+    d = 48
 
     len_tr = len(train_x[0, :])  # 시간 포인트 수
     day_t = len(train_x)
