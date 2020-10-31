@@ -17,6 +17,7 @@ from matplotlib import pyplot as plt
 ##############################
 # 1. 데이터 로드, nan 유무 저장
 test_house = '68181c16'
+# test_house = '1dcb5feb'
 
 data_raw = load_labeled()
 data, nan_data = clear_head(data_raw)

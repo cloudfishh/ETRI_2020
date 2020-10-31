@@ -378,3 +378,34 @@ for method in list(['201017_detection_deepar', '201017_detection_nearest']):
 
     accuracy_by_cases(df)
 
+
+df = pd.read_csv('201022_result.csv')
+
+
+#
+hfont = {'fontname':'Helvetica'}
+plt.figure(figsize = (4,4), dpi=400)
+barlist = plt.bar(['AR w/o const.','LI w/ const.','AR w/ const.'], np.nanmean(MAE_42,axis=1), width=0.5)
+barlist[0].set_color('r')
+barlist[1].set_color('b')
+barlist[2].set_color('g')
+plt.ylabel('MAE [kW]', **hfont)
+plt.rcParams["font.family"] = "Helvetica"
+plt.savefig('Fig_MAE (b).pdf', dpi=None, facecolor='w', edgecolor='w',
+        orientation='portrait', papertype=None, format='pdf',
+        transparent=False, bbox_inches=None, pad_inches=0.1,
+        frameon=None, metadata=None)
+
+
+hfont = {'fontname':'Helvetica'}
+plt.figure(figsize = (4,4), dpi=400)
+barlist = plt.bar(['AR w/o const.','LI w/ const.','AR w/ const.'], np.nanmean(MAE_32,axis=1), width=0.5)
+barlist[0].set_color('r')
+barlist[1].set_color('b')
+barlist[2].set_color('g')
+plt.ylabel('MAE [kW]', **hfont)
+plt.rcParams["font.family"] = "Helvetica"
+plt.savefig('Fig_MAE (b).pdf', dpi=None, facecolor='w', edgecolor='w',
+        orientation='portrait', papertype=None, format='pdf',
+        transparent=False, bbox_inches=None, pad_inches=0.1,
+        frameon=None, metadata=None)

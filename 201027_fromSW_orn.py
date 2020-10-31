@@ -56,13 +56,13 @@ else:
         LI_wc[ii] = Rv[int(cum_Err)+St]+(Rv[int(cum_Err)+St+np.max(cum_len)]-Rv[int(cum_Err)+St])*(ii)/int(np.max(cum_len))
     
 # Linear interpolration
-#
+
 # plt.figure(figsize = (6,6), dpi=400)
 # plt.plot(range(0,len_win), Rv[Real_len==1], '-bx', linewidth=1, markersize=12)
 #
-# # plt.plot(range(int(cum_Err)+1,int(cum_Err+np.max(cum_len))),PwoC[(Real_len==1)&(label>=2)][1:], '-mv', linewidth=1, markersize=12)
-# plt.plot(range(int(cum_Err)+1,int(cum_Err+np.max(cum_len))),LI_wc[1:], '-cP', linewidth=1, markersize=12)
-# plt.plot(range(int(cum_Err)+1,int(cum_Err+np.max(cum_len))),PwC[(Real_len==1)&(label>=2)][1:], '-rd', linewidth=1, markersize=12)
+# plt.plot(range(int(cum_Err),int(cum_Err+np.max(cum_len))),PwoC[(Real_len==1)&(label>=2)], '-mv', linewidth=1, markersize=12)
+# plt.plot(range(int(cum_Err),int(cum_Err+np.max(cum_len))),LI_wc, '-cP', linewidth=1, markersize=12)
+# plt.plot(range(int(cum_Err),int(cum_Err+np.max(cum_len))),PwC[(Real_len==1)&(label>=2)], '-rd', linewidth=1, markersize=12)
 #
 # plt.plot([int(cum_Err), int(cum_Err)],[0, 100], '--k', linewidth=.3)
 # plt.plot([int(cum_Err+np.max(cum_len)-1), int(cum_Err+np.max(cum_len)-1)],[0, 100], '--k', linewidth=.3)
@@ -74,9 +74,9 @@ else:
 # plt.ylabel('Power [kW]')
 # font = {'family' : 'normal', 'weight' : 'normal', 'size': 18}
 # plt.rc('font', **font)
-# plt.legend(['Actual data', 'Linear interp.','Joint imp.'])
+# plt.legend(['Actual data','joint w/o const.','LI w/ const.','joint w/ const.'])
 # plt.tight_layout()
-# plt.savefig('Fig_line_(a).pdf', dpi=None, facecolor='w', edgecolor='w',
+# plt.savefig('Fig_(a).pdf', dpi=None, facecolor='w', edgecolor='w',
 #         orientation='portrait', papertype=None, format='pdf',
 #         transparent=False, bbox_inches=None, pad_inches=0.1,
 #         frameon=None, metadata=None)
@@ -98,7 +98,7 @@ for ii in range(0, int(np.max(cum_len))):
     LI_wc[ii] = Rv[int(cum_Err)+St-1]+(Rv[int(cum_Err)+St+np.max(cum_len)]-Rv[int(cum_Err)+St-1])*(ii+1)/int(np.max(cum_len)+1)
 
 # Linear interpolration
-#
+
 # plt.figure(figsize = (6,6), dpi=400)
 # plt.plot(range(0,len_win), Rv[Real_len==1], '-bx', linewidth=1, markersize=12)
 #
@@ -118,9 +118,9 @@ for ii in range(0, int(np.max(cum_len))):
 # plt.ylabel('Power [kW]')
 # font = {'family' : 'normal', 'weight' : 'normal', 'size': 18}
 # plt.rc('font', **font)
-# plt.legend(['Actual data','Joint w/o const.','LI w/ const.','Joint w/ const.', 'Outlier'])
+# plt.legend(['Actual data','joint w/o const.','LI w/ const.','joint w/ const.', 'Outlier'])
 # plt.tight_layout()
-# plt.savefig('Fig_line_(b).pdf', dpi=None, facecolor='w', edgecolor='w',
+# plt.savefig('Fig_(b).pdf', dpi=None, facecolor='w', edgecolor='w',
 #         orientation='portrait', papertype=None, format='pdf',
 #         transparent=False, bbox_inches=None, pad_inches=0.1,
 #         frameon=None, metadata=None)
@@ -194,31 +194,31 @@ for ii in range(0, np.sum(A32)):
         RMSE_32[:,ii] = Rv[1]          
         
 hfont = {'fontname':'Helvetica'}
-plt.figure(figsize = (4,4), dpi=100)
+plt.figure(figsize = (4,4), dpi=400)
 barlist = plt.bar(['joint w/o const.','LI w/ const.','joint w/ const.'], np.nanmean(MAE_42,axis=1), width=0.5)
 barlist[0].set_color('r')
 barlist[1].set_color('b')
 barlist[2].set_color('g')
 plt.ylabel('MAE [kW]', **hfont)
 plt.rcParams["font.family"] = "Helvetica"
-# plt.savefig('Fig_MAE (b).pdf', dpi=None, facecolor='w', edgecolor='w',
-#         orientation='portrait', papertype=None, format='pdf',
-#         transparent=False, bbox_inches=None, pad_inches=0.1,
-#         frameon=None, metadata=None)
+plt.savefig('Fig_MAE (b).pdf', dpi=None, facecolor='w', edgecolor='w',
+        orientation='portrait', papertype=None, format='pdf',
+        transparent=False, bbox_inches=None, pad_inches=0.1,
+        frameon=None, metadata=None)
 
 
 hfont = {'fontname':'Helvetica'}
-plt.figure(figsize = (4,4), dpi=100)
+plt.figure(figsize = (4,4), dpi=400)
 barlist = plt.bar(['joint w/o const.','LI w/ const.','joint w/ const.'], np.nanmean(MAE_32,axis=1), width=0.5)
 barlist[0].set_color('r')
 barlist[1].set_color('b')
 barlist[2].set_color('g')
 plt.ylabel('MAE [kW]', **hfont)
 plt.rcParams["font.family"] = "Helvetica"
-# plt.savefig('Fig_MAE (b).pdf', dpi=None, facecolor='w', edgecolor='w',
-#         orientation='portrait', papertype=None, format='pdf',
-#         transparent=False, bbox_inches=None, pad_inches=0.1,
-#         frameon=None, metadata=None)
+plt.savefig('Fig_MAE (b).pdf', dpi=None, facecolor='w', edgecolor='w',
+        orientation='portrait', papertype=None, format='pdf',
+        transparent=False, bbox_inches=None, pad_inches=0.1,
+        frameon=None, metadata=None)
 
 #%%
 
@@ -228,7 +228,7 @@ hfont = {'fontname':'Helvetica'}
 plt.figure(figsize = (6,6), dpi=400)
 sns.set(style="ticks", palette='Set2', font='Helvetica')
 sns.set_context("paper", font_scale=2, rc={"lines.linewidth": 1.1})
-g=sns.factorplot(data=yy.iloc, kind="box", size=7, aspect=0.6,
+g=sns.factorplot(data=yy, kind="box", size=7, aspect=0.6,
                  width=.8,fliersize=2.5, linewidth=1.1, notch=False, orient="v")
 plt.ylim([0,3])
 plt.ylabel('MAE [kW]', **hfont)
@@ -240,15 +240,16 @@ plt.savefig('Fig_MAE (a).pdf', dpi=None, facecolor='w', edgecolor='w',
         transparent=False, bbox_inches=None, pad_inches=0.1,
         frameon=None, metadata=None)
 
-yy = pd.DataFrame(MAE_32.T, columns=['joint w/o const.','LI w/ const.','joint w/ const.'])
 
+yy = pd.DataFrame(MAE_32.T, columns=['joint w/o const.','Linear interp.','Joint imp.'])
 
 hfont = {'fontname':'Helvetica'}
-plt.figure(figsize = (6,6), dpi=100)
-sns.set(style="ticks", palette='Set2', font='Helvetica')
+plt.figure(figsize = (6,6), dpi=400)
+# sns.set(style="ticks", palette='Set2', font='Helvetica')
+sns.set(style="ticks", palette=sns.color_palette('Set2')[1:], font='Helvetica')
 sns.set_context("paper", font_scale=2, rc={"lines.linewidth": 1.1})
-g=sns.factorplot(data=yy, kind="box", size=7, aspect=0.6,
-                 width=.8,fliersize=2.5, linewidth=1.1, notch=False, orient="v")
+g=sns.factorplot(data=yy.iloc[:,1:], kind="box", size=7, aspect=0.6,
+                 width=.5,fliersize=2.5, linewidth=1.1, notch=False, orient="v")
 plt.ylabel('MAE [kW]', **hfont)
 plt.rcParams["font.family"] = "Helvetica"
 plt.ylim([0,1])
@@ -263,7 +264,7 @@ plt.savefig('Fig_MAE (b).pdf', dpi=None, facecolor='w', edgecolor='w',
 yy = pd.DataFrame(RMSE_42.T, columns=['joint w/o const.','LI w/ const.','joint w/ const.'])
 
 hfont = {'fontname':'Helvetica'}
-plt.figure(figsize = (6,6), dpi=100)
+plt.figure(figsize = (6,6), dpi=400)
 sns.set(style="ticks", palette='Set2', font='Helvetica')
 sns.set_context("paper", font_scale=2, rc={"lines.linewidth": 1.1})
 g=sns.factorplot(data=yy, kind="box", size=7, aspect=0.6,
@@ -282,7 +283,7 @@ yy = pd.DataFrame(RMSE_32.T, columns=['joint w/o const.','LI w/ const.','joint w
 
 
 hfont = {'fontname':'Helvetica'}
-plt.figure(figsize = (6,6), dpi=100)
+plt.figure(figsize = (6,6), dpi=400)
 sns.set(style="ticks", palette='Set2', font='Helvetica')
 sns.set_context("paper", font_scale=2, rc={"lines.linewidth": 1.1})
 g=sns.factorplot(data=yy, kind="box", size=7, aspect=0.6,
