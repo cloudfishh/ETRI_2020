@@ -1,0 +1,3 @@
+w/o outlier cases [joint w/, joint w/o, linear] = [0.11187928 0.11187928 0.13597734]
+w/  outlier cases [joint w/, joint w/o, linear] = [0.16893935 1.22212719 0.26607187]
+            total [joint w/, joint w/o, linear] = [0.12911663400190493, 0.44727565492142707, 0.17527778069198746]
