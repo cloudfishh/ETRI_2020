@@ -1,6 +1,7 @@
 """
-analyse the all results from households 234
-2020. 10. 28?
+analyse results
+ - joint / LI / ** spline **
+2020. 11. 05. Thu
 SYPark
 """
 import pandas as pd
@@ -28,48 +29,51 @@ def RMSE(A, B):
 
 
 ############################################################
-# 불러오기 해서 temp를 데이터 전체를 잇도록 해버리면 되겟죵?
-# 28일 아침에 출근해서 파일 옮겨서 딱 돌릴 수 있게 만듭시다
+# 모든 result 로드, dataframe 하나에 병합
 result_filelist = [f for f in os.listdir('D:/2020_ETRI/result_201027') if f.endswith('_result.csv')]
 temp = pd.DataFrame([])
 for f in result_filelist:
     # temp = pd.concat([temp, pd.read_csv(f'result_201027/{f}', index_col=0)], axis=0)
     temp = pd.concat([temp, pd.read_csv(f'D:/2020_ETRI/result_201027/{f}')], axis=0)
 
+
+############################################################
+# 데이터프레임 인덱스 리셋, nan length 설정
 df = temp.copy().reset_index()
 nan_len = 5
 
-linear = df[{'values', 'injected', 'mask_detected'}].copy()
+
+############################################################
+# LINEAR INTERPOLATION - w/ const, w/o const
+# 근데 지금 여기서 linear w/o const 결과가 같아야하는데 다르게 나오거든?
+# 이걸 확인해봐야됨
+linear = df[{'injected', 'mask_detected'}].copy()
 linear['imp_linear_const'] = linear['injected'].copy()
 linear['imp_linear_no-const'] = linear['injected'].copy()
 
-# injection 바로 앞에 또 injection이 있는 경우에 이어서 하면 안 되잖아
 for idx in np.where((linear['mask_detected']==3)|(linear['mask_detected']==4))[0]:
-    temp_col = linear['values'].copy()
-    temp_col[idx:idx+nan_len+2] = linear['injected'][idx:idx+nan_len+2]
-
-    linear['imp_linear_no-const'][idx:idx+nan_len+2] = temp_col[idx:idx+nan_len+2].interpolate(method='linear')
     if linear['mask_detected'][idx] == 3:
         p = 0
-        while pd.isna(temp_col[idx-p]):
+        while pd.isna(linear['imp_linear_const'][idx-p]):
             p += 1
         q = 0
-        while pd.isna(temp_col[idx+nan_len+2+q]):
+        while pd.isna(linear['imp_linear_const'][idx+nan_len+2+q]):
             q += 1
-        linear['imp_linear_const'][idx:idx+nan_len+2] = temp_col[idx:idx+nan_len+2].interpolate(method='linear')
+        linear['imp_linear_const'][idx:idx+nan_len+2] = linear['injected'][idx:idx+nan_len+2].interpolate(method='linear')
 
     else:   # 4
         p = 0
-        while pd.isna(temp_col[idx-1-p]):
+        while pd.isna(linear['imp_linear_const'][idx-1-p]):
             p += 1
         q = 0
-        while pd.isna(temp_col[idx+nan_len+2+q]):
+        while pd.isna(linear['imp_linear_const'][idx+nan_len+2+q]):
             q += 1
-        s = temp_col[idx]
-        temp_col[idx] = np.nan
-        li_temp = temp_col[idx-1-p:idx+nan_len+2+q].interpolate(method='linear')
+        s = linear['imp_linear_const'][idx]
+        linear['imp_linear_const'][idx] = np.nan
+        li_temp = linear['imp_linear_const'][idx-1-p:idx+nan_len+2+q].interpolate(method='linear')
         linear['imp_linear_const'][idx-1-p:idx+nan_len+2+q] = li_temp*(s/sum(li_temp.values))
-    print(idx)
+
+    linear['imp_linear_no-const'][idx:idx+nan_len+2] = linear['injected'][idx:idx+nan_len+2].interpolate(method='linear')
 df['imp_linear_const'] = linear['imp_linear_const'].copy()
 df['imp_linear_no-const'] = linear['imp_linear_no-const'].copy()
 
@@ -242,30 +246,28 @@ plt.savefig('Fig_line_(a).pdf', dpi=None, facecolor='w', edgecolor='w',
 # without accumulated outlier
 for idx in np.where(df['mask_detected']==4)[0][4300:4350]:
     diff = MAE(df['values'][idx+1:idx+nan_len+1].values, df['imp_linear_const'][idx+1:idx+nan_len+1].values) - MAE(df['values'][idx+1:idx+nan_len+1].values, df['imp_const'][idx+1:idx+nan_len+1].values)
-    if diff >= 0.1:
+    if diff >= 0.9:
         print(idx, diff)
 
         plt.figure()
-        plt.plot(df['values'][idx-5:idx+nan_len+1+5], '-bx', linewidth=1, markersize=12)
-        plt.plot(df['imp_no-const'][idx-5:idx+nan_len+1+5], '-mv', linewidth=1, markersize=12)
-        plt.plot(df['imp_const'][idx-5:idx+nan_len+1+5], '-rd', linewidth=1, markersize=12)
-        plt.plot(df['imp_linear_const'][idx-5:idx+nan_len+1+5], '-cP', linewidth=1, markersize=12)
-        plt.plot(df['imp_linear_no-const'][idx-5:idx+nan_len+1+5], '-g*', linewidth=1, markersize=12)
-        plt.plot([idx, idx], [0, 100], '--k', linewidth=.3)
-        plt.plot([idx+nan_len, idx+nan_len], [0, 100], '--k', linewidth=.3)
-        plt.ylim([0, 3])
+        plt.plot(df['values'][idx:idx+nan_len+1], '-bx', linewidth=1, markersize=12)
+        plt.plot(df['imp_no-const'][idx:idx+nan_len+1], '-mv', linewidth=1, markersize=12)
+        plt.plot(df['imp_const'][idx:idx+nan_len+1], '-rd', linewidth=1, markersize=12)
+        plt.plot(df['imp_linear_const'][idx:idx+nan_len+1], '-cP', linewidth=1, markersize=12)
+        plt.plot(df['imp_linear_no-const'][idx:idx+nan_len+1], '-g*', linewidth=1, markersize=12)
+        # plt.ylim([0, 1.0])
         plt.xlabel('Time [h]')
         plt.ylabel('Power [kW]')
         plt.legend(['Observed data', 'Joint w/o const.', 'Joint w/ const.', 'LI w/ const.', 'LI w/o const.'])
 
 
 idx = 50929
-# idx = 1213570
+# idx = 1218465
 h = int(df['Time'][idx][11:13])
 idx_0h = idx-h
 idx_23h = idx+(24-h)
 
-plt.figure(figsize=(6, 6), dpi=100)
+plt.figure(figsize=(6, 6), dpi=400)
 plt.plot(df['values'][idx_0h:idx_23h+1], '-bx', linewidth=1, markersize=12)
 plt.plot(np.arange(idx,idx+nan_len+1), df['imp_const'][idx:idx+nan_len+1], '-rd', linewidth=1, markersize=12)
 plt.plot(np.arange(idx,idx+nan_len+1), df['imp_no-const'][idx:idx+nan_len+1], '-mv', linewidth=1, markersize=12)

@@ -18,6 +18,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 from matplotlib import pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
+import statistics
 
 
 def accuracy_by_cases(df):
@@ -30,10 +31,13 @@ def accuracy_by_cases(df):
         result_impt.append(df['imp_const'][idx:idx+4])
     result_true = np.array(result_true)
     result_impt = np.array(result_impt)
+    result_true = result_true.reshape([result_true.shape[0]*result_true.shape[1],])
+    result_impt = result_impt.reshape([result_impt.shape[0]*result_impt.shape[1],])
     print('1. true normal / predicted normal')
     print(f'   MAE {mean_absolute_error(result_true, result_impt)}')
     print(f'  RMSE {mean_squared_error(result_true, result_impt)**(1/2)}')
-    print(f'  MAPE {mape(result_true, result_impt)}\n')
+    print(f'  MAPE {mape(result_true, result_impt)}')
+    print(f' sMAPE {smape(result_true, result_impt)}\n')
 
 
     # (2) true normal / predicted acc - 2 cases: w or w/o const.
@@ -43,10 +47,13 @@ def accuracy_by_cases(df):
         result_impt.append(df['imp_const'][idx:idx+4])
     result_true = np.array(result_true)
     result_impt = np.array(result_impt)
+    result_true = result_true.reshape([result_true.shape[0]*result_true.shape[1],])
+    result_impt = result_impt.reshape([result_impt.shape[0]*result_impt.shape[1],])
     print('2-1. true normal / predicted acc - with const.')
     print(f'   MAE {mean_absolute_error(result_true, result_impt)}')
     print(f'  RMSE {mean_squared_error(result_true, result_impt)**(1/2)}')
-    print(f'  MAPE {mape(result_true, result_impt)}\n')
+    print(f'  MAPE {mape(result_true, result_impt)}')
+    print(f' sMAPE {smape(result_true, result_impt)}\n')
 
     result_true, result_impt = [], []
     for idx in np.where((df['mask_inj']==3)&(df['mask_detected']==4))[0]:
@@ -54,10 +61,13 @@ def accuracy_by_cases(df):
         result_impt.append(df['imp_no-const'][idx:idx+4])
     result_true = np.array(result_true)
     result_impt = np.array(result_impt)
+    result_true = result_true.reshape([result_true.shape[0]*result_true.shape[1],])
+    result_impt = result_impt.reshape([result_impt.shape[0]*result_impt.shape[1],])
     print('2-2. true normal / predicted acc - w/o const.')
     print(f'   MAE {mean_absolute_error(result_true, result_impt)}')
     print(f'  RMSE {mean_squared_error(result_true, result_impt)**(1/2)}')
-    print(f'  MAPE {mape(result_true, result_impt)}\n')
+    print(f'  MAPE {mape(result_true, result_impt)}')
+    print(f' sMAPE {smape(result_true, result_impt)}\n')
 
 
     # (3) true acc / predicted normal
@@ -67,10 +77,13 @@ def accuracy_by_cases(df):
         result_impt.append(df['imp_const'][idx:idx+4])
     result_true = np.array(result_true)
     result_impt = np.array(result_impt)
+    result_true = result_true.reshape([result_true.shape[0]*result_true.shape[1],])
+    result_impt = result_impt.reshape([result_impt.shape[0]*result_impt.shape[1],])
     print('3. true acc / predicted normal')
     print(f'   MAE {mean_absolute_error(result_true, result_impt)}')
     print(f'  RMSE {mean_squared_error(result_true, result_impt)**(1/2)}')
-    print(f'  MAPE {mape(result_true, result_impt)}\n')
+    print(f'  MAPE {mape(result_true, result_impt)}')
+    print(f' sMAPE {smape(result_true, result_impt)}\n')
 
 
     # (4) true acc / predicted acc - 2 cases: w or w/o const.
@@ -80,10 +93,13 @@ def accuracy_by_cases(df):
         result_impt.append(df['imp_const'][idx:idx+4])
     result_true = np.array(result_true)
     result_impt = np.array(result_impt)
+    result_true = result_true.reshape([result_true.shape[0]*result_true.shape[1],])
+    result_impt = result_impt.reshape([result_impt.shape[0]*result_impt.shape[1],])
     print('4-1. true acc / predicted acc - with const.')
     print(f'   MAE {mean_absolute_error(result_true, result_impt)}')
     print(f'  RMSE {mean_squared_error(result_true, result_impt)**(1/2)}')
-    print(f'  MAPE {mape(result_true, result_impt)}\n')
+    print(f'  MAPE {mape(result_true, result_impt)}')
+    print(f' sMAPE {smape(result_true, result_impt)}\n')
 
     result_true, result_impt = [], []
     for idx in np.where((df['mask_inj']==4)&(df['mask_detected']==4))[0]:
@@ -91,10 +107,13 @@ def accuracy_by_cases(df):
         result_impt.append(df['imp_no-const'][idx:idx+4])
     result_true = np.array(result_true)
     result_impt = np.array(result_impt)
+    result_true = result_true.reshape([result_true.shape[0]*result_true.shape[1],])
+    result_impt = result_impt.reshape([result_impt.shape[0]*result_impt.shape[1],])
     print('4-2. true acc / predicted acc - w/o const.')
     print(f'   MAE {mean_absolute_error(result_true, result_impt)}')
     print(f'  RMSE {mean_squared_error(result_true, result_impt)**(1/2)}')
-    print(f'  MAPE {mape(result_true, result_impt)}\n')
+    print(f'  MAPE {mape(result_true, result_impt)}')
+    print(f' sMAPE {smape(result_true, result_impt)}\n')
 
 
     # (5) total accuracy
@@ -104,10 +123,13 @@ def accuracy_by_cases(df):
         result_impt.append(df['imp_const'][idx:idx+4])
     result_true = np.array(result_true)
     result_impt = np.array(result_impt)
+    result_true = result_true.reshape([result_true.shape[0]*result_true.shape[1],])
+    result_impt = result_impt.reshape([result_impt.shape[0]*result_impt.shape[1],])
     print('5-1. total accuracy - w/ const.')
     print(f'   MAE {mean_absolute_error(result_true, result_impt)}')
     print(f'  RMSE {mean_squared_error(result_true, result_impt)**(1/2)}')
-    print(f'  MAPE {mape(result_true, result_impt)}\n')
+    print(f'  MAPE {mape(result_true, result_impt)}')
+    print(f' sMAPE {smape(result_true, result_impt)}\n')
 
     result_true, result_impt = [], []
     for idx in np.where((df['mask_inj']==3)|(df['mask_inj']==4))[0]:
@@ -115,16 +137,19 @@ def accuracy_by_cases(df):
         result_impt.append(df['imp_no-const'][idx:idx+4])
     result_true = np.array(result_true)
     result_impt = np.array(result_impt)
+    result_true = result_true.reshape([result_true.shape[0]*result_true.shape[1],])
+    result_impt = result_impt.reshape([result_impt.shape[0]*result_impt.shape[1],])
     print('5-2. total accuracy - w/o const.')
     print(f'   MAE {mean_absolute_error(result_true, result_impt)}')
     print(f'  RMSE {mean_squared_error(result_true, result_impt)**(1/2)}')
-    print(f'  MAPE {mape(result_true, result_impt)}\n')
+    print(f'  MAPE {mape(result_true, result_impt)}')
+    print(f' sMAPE {smape(result_true, result_impt)}\n')
 
 
 ##############################
 # 0. parameter setting
 # test_house_list = ['68181c16', '1dcb5feb', '2ac64232', '3b218da6', '6a638b96']
-test_house = '1dcb5feb'
+test_house = '68181c16'
 f_fwd, f_bwd = 24, 24
 nan_len = 3
 
@@ -241,7 +266,7 @@ for method in list(['201017_detection_deepar', '201017_detection_nearest']):
     detection_result = pd.read_csv(f'result/{test_house}/201017_lossfunc_{method[17:]}_{test_house}.csv', index_col=0)
 
     plt.rcParams.update({'font.size': 14})
-    plt.figure(figsize=(6,4), dpi=400)
+    plt.figure(figsize=(6,4), dpi=100)
     plt.plot(detection_result['thld'], detection_result['MAE'])
     plt.plot(detection_result['thld'], detection_result['MAE_no'])
     plt.axvline(x=detection_result['thld'][detection_result['MAE']==detection_result['MAE'].min()].values[0], color='r',
@@ -283,7 +308,7 @@ for method in list(['201017_detection_deepar', '201017_detection_nearest']):
     cm_label = np.asarray(cm_label).reshape(2, 2)
 
     plt.rcParams.update({'font.size': 16})
-    plt.figure(figsize=(4, 4), dpi=400)
+    plt.figure(figsize=(4, 4), dpi=100)
     sns.heatmap(cm, annot=cm_label, fmt='', square=True, cmap='Greys', annot_kws={'size': 15}, # 'gist_gray': reverse
                 xticklabels=['normal', 'anomaly'], yticklabels=['normal', 'anomaly'], cbar=False)
     # plt.title(f'{test_house}, {method[17:]}, nan_length=3, threshold={threshold}', fontsize=14)
@@ -300,6 +325,11 @@ for method in list(['201017_detection_deepar', '201017_detection_nearest']):
 
     df['imp_const'] = df['injected'].copy()
     df['imp_no-const'] = df['injected'].copy()
+
+    # 0값 한 줄 있어서 그거만 처리하자 ~ 대충 선형보간하면 0.4정도 되는거같음.
+    # df['values'][3791], df['imp_const'][3791], df['imp_no-const'][3791] = 0.4, 0.4, 0.4
+    # data_col[3791] = 0.4
+    df['values'][3791], data_col[3791] = 0.0001, 0.0001
 
     # 4-1. normal imputation - idx_detected_nor
     for idx in idx_detected_nor:
@@ -380,32 +410,3 @@ for method in list(['201017_detection_deepar', '201017_detection_nearest']):
 
 
 df = pd.read_csv('201022_result.csv')
-
-
-#
-hfont = {'fontname':'Helvetica'}
-plt.figure(figsize = (4,4), dpi=400)
-barlist = plt.bar(['AR w/o const.','LI w/ const.','AR w/ const.'], np.nanmean(MAE_42,axis=1), width=0.5)
-barlist[0].set_color('r')
-barlist[1].set_color('b')
-barlist[2].set_color('g')
-plt.ylabel('MAE [kW]', **hfont)
-plt.rcParams["font.family"] = "Helvetica"
-plt.savefig('Fig_MAE (b).pdf', dpi=None, facecolor='w', edgecolor='w',
-        orientation='portrait', papertype=None, format='pdf',
-        transparent=False, bbox_inches=None, pad_inches=0.1,
-        frameon=None, metadata=None)
-
-
-hfont = {'fontname':'Helvetica'}
-plt.figure(figsize = (4,4), dpi=400)
-barlist = plt.bar(['AR w/o const.','LI w/ const.','AR w/ const.'], np.nanmean(MAE_32,axis=1), width=0.5)
-barlist[0].set_color('r')
-barlist[1].set_color('b')
-barlist[2].set_color('g')
-plt.ylabel('MAE [kW]', **hfont)
-plt.rcParams["font.family"] = "Helvetica"
-plt.savefig('Fig_MAE (b).pdf', dpi=None, facecolor='w', edgecolor='w',
-        orientation='portrait', papertype=None, format='pdf',
-        transparent=False, bbox_inches=None, pad_inches=0.1,
-        frameon=None, metadata=None)
