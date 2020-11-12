@@ -31,10 +31,16 @@ threshold_df = pd.DataFrame([], columns=['test_house', 'thld'])
 for test_house in data.columns:
     print(f'********** TEST HOUSE {test_house} start - {np.where(data.columns == test_house)[0][0]}th')
     data_col = data[test_house]
-    calendar = load_calendar(2017, 2019)
+    # calendar = load_calendar(2017, 2019)
+
     df = pd.DataFrame([], index=data_col.index)
     df['values'] = data_col.copy()
     df['nan'] = chk_nan_bfaf(data_col)
+    df['holiday'] = load_calendar(2017, 2019)[data_col.index[0]:data_col.index[-1]]
+    df['org_idx'] = np.arange(0, len(data_col))
+
+    weather = load_weather('incheon', 2017, 2019)[df.index[0][:16]:df.index[-1][:16]]
+    weather.index = df.index
 
 
     ##############################
@@ -45,8 +51,6 @@ for test_house in data.columns:
     ##############################
     # 3. accumulation detection
     print(f'***** 1. detection : NEAREST')
-    df['holiday'] = calendar[data_col.index[0]:data_col.index[-1]]
-    df['org_idx'] = np.arange(0, len(data_col))
 
     idx_list = np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]
     nan_mask = df['nan'].copy()

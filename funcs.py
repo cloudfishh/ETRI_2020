@@ -558,6 +558,29 @@ def nearest_neighbor(data_col, nan_mask, idx_target, calendar):
     return np.array(ma.tolist()), ma.mean(), ma.std()
 
 
+def similar_days(df, idx_target, weather, feature):
+    # 특정 기상 요소를 기준으로 비슷한 날들 가져오기.
+    # 기존 nearest neighbor는 앞뒤 한 달 (총 두 달) 중에서 holiday 일치하는 거만 가져왔음.
+    # 그럼 similar day는 서치하는 범위를 어케 잡아야 할 것 같나?
+    # 전체로 잡자 ㅋㅋㅋㅋ ㅋㅋㅋ 뭐 어때 좀 오래 걸리긴 하겠지만 그게 확실하겠지
+    # 전체로 잡고 총 개수는 nearest neighbor랑 맞추자.
+
+    # 특정 기상 요소를 기준으로, 비슷한 n개 (n = 45 if holiday==0 else 15) 가져오기
+    # holiday도 고려하기
+
+    # target idx가 속해있는 하루를 단위로 잡고 비슷한 '날'을 n개 가져오면 되겠지 일단
+
+    feat_col = weather[feature]
+    target_hour = int(weather.index[idx_target][11:13])
+    # target_day = df['values'][idx_target-target_hour:idx_target+(24-target_hour)]
+    feat_day = weather[feature][idx_target-target_hour:idx_target+(24-target_hour)]
+    diff_list = []
+    for i in range(int(weather.shape[0]/24)):
+        diff_list.append(sum(abs(feat_day.values-feat_col[24*i:24*(i+1)].values)))
+
+    pass
+
+
 def inject_nan_imputation(d_col, n_mask, n_len=3):
     # d_col에서 n_len=3인 window를 moving해서 모든 데이터를 출력해주자. output: 2D data, 2D mask
     # forward, backward 각 4일씩 넣을 거니까... 앞 뒤 5주~-5주까지 범위로. -> 이건 그냥 후처리 해주자...
