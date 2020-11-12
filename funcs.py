@@ -70,6 +70,18 @@ def load_labeled():
     return data
 
 
+def load_weather(loc, y1, y2):
+    dir_weather = 'D:/2020_ETRI/data/weather'
+    weather = pd.DataFrame([])
+    for y in range(y1, y2+1):
+        weather = pd.concat([weather, pd.read_csv(f'{dir_weather}/weather_{loc}_{y}.csv', header=None, encoding='CP949')])
+    weather.columns = weather.iloc[0, :]
+    weather = weather.drop(0, axis=0)
+    weather.index = weather['일시']
+    weather = weather.drop(columns=['지점', '지점명', '일시', '운형(운형약어)']).astype(np.float64)
+    return weather
+
+
 def clear_head(data):
     sum_data = np.array([])
     for i in range(len(data.iloc[:, 0])):
@@ -788,7 +800,6 @@ def bidirec_dataset_deepar(df, idx, len_unit, len_train):
                                                    df.index[idx_tst_bwd_start]:df.index[idx_tst_bwd_end]][::-1].values.reshape((1,len_unit))}], freq='1H')
 
     return trn_fwd, tst_fwd, trn_bwd, tst_bwd
-
 
 
 def model_deepar_test(len_unit, feature=True, epochs=10):

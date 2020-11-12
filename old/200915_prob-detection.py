@@ -119,7 +119,7 @@ for i in range(len(idx_list)):
     sample_list.append(forecasts[0].samples.reshape(1000,))
 
 print(f'***** Total elapsed time {time.time()-total_time} secs')
-pd.DataFrame(sample_list).to_csv('result_deepar.csv')
+pd.DataFrame(sample_list).to_csv('../result_deepar.csv')
 
 
 # 3-2. z-score

@@ -1,7 +1,8 @@
 """
-analyse results
- - joint / LI / ** spline **
-2020. 11. 05. Thu
+analyse the all results from households 234
+ ~ add the spline test
+
+2020. 11. 10.
 SYPark
 """
 import pandas as pd
@@ -29,56 +30,119 @@ def RMSE(A, B):
 
 
 ############################################################
-# 모든 result 로드, dataframe 하나에 병합
-result_filelist = [f for f in os.listdir('D:/2020_ETRI/result_201027') if f.endswith('_result.csv')]
-temp = pd.DataFrame([])
-for f in result_filelist:
-    # temp = pd.concat([temp, pd.read_csv(f'result_201027/{f}', index_col=0)], axis=0)
-    temp = pd.concat([temp, pd.read_csv(f'D:/2020_ETRI/result_201027/{f}')], axis=0)
+# 데이터 일단 다 붙여
+# result_filelist = [f for f in os.listdir('D:/2020_ETRI/result_201027') if f.endswith('_result.csv')]
+# temp = pd.DataFrame([])
+# for f in result_filelist:
+#     # temp = pd.concat([temp, pd.read_csv(f'result_201027/{f}', index_col=0)], axis=0)
+#     temp = pd.concat([temp, pd.read_csv(f'D:/2020_ETRI/result_201027/{f}')], axis=0)
+#
+# df = temp.copy().reset_index()
+# df.to_csv('D:/2020_ETRI/201101_result_justconcat.csv')
 
 
 ############################################################
-# 데이터프레임 인덱스 리셋, nan length 설정
-df = temp.copy().reset_index()
+# LINEAR INTERPOLATION
+df = pd.read_csv('D:/2020_ETRI/201101_result_justconcat.csv')
 nan_len = 5
 
-
-############################################################
-# LINEAR INTERPOLATION - w/ const, w/o const
-# 근데 지금 여기서 linear w/o const 결과가 같아야하는데 다르게 나오거든?
-# 이걸 확인해봐야됨
-linear = df[{'injected', 'mask_detected'}].copy()
+linear = df[{'values', 'injected', 'mask_detected'}].copy()
 linear['imp_linear_const'] = linear['injected'].copy()
 linear['imp_linear_no-const'] = linear['injected'].copy()
 
+print('***** LINEAR INTERPOLATION *****')
+# injection 바로 앞에 또 injection이 있는 경우에 이어서 하면 안 되잖아
 for idx in np.where((linear['mask_detected']==3)|(linear['mask_detected']==4))[0]:
+    temp_nocon, temp_const = linear['values'].copy(), linear['values'].copy()
+    temp_nocon[:idx], temp_const[:idx] = linear['values'][:idx], linear['values'][:idx]
+    # temp_nocon[:idx], temp_const[:idx] = linear['imp_linear_no-const'][:idx], linear['imp_linear_const'][:idx]
+    temp_nocon[idx:idx+nan_len+2], temp_const[idx:idx+nan_len+2] = linear['injected'][idx:idx+nan_len+2], linear['injected'][idx:idx+nan_len+2]
+
+    # w/o const
+    p, q = 0, 0
+    while pd.isna(temp_nocon[idx-p]):
+        p += 1
+    while pd.isna(temp_nocon[idx+nan_len+2+q]):
+        q += 1
+    linear['imp_linear_no-const'][idx:idx+nan_len+2] = temp_nocon[idx-p:idx+nan_len+2+q].interpolate(method='linear')
+
+    # w/ const
     if linear['mask_detected'][idx] == 3:
-        p = 0
-        while pd.isna(linear['imp_linear_const'][idx-p]):
+        p, q = 0, 0
+        while pd.isna(temp_const[idx-p]):
             p += 1
-        q = 0
-        while pd.isna(linear['imp_linear_const'][idx+nan_len+2+q]):
+        while pd.isna(temp_const[idx+nan_len+2+q]):
             q += 1
-        linear['imp_linear_const'][idx:idx+nan_len+2] = linear['injected'][idx:idx+nan_len+2].interpolate(method='linear')
+        linear['imp_linear_const'][idx:idx+nan_len+2] = temp_const[idx-p:idx+nan_len+2+q].interpolate(method='linear')
 
     else:   # 4
-        p = 0
-        while pd.isna(linear['imp_linear_const'][idx-1-p]):
+        p, q = 0, 0
+        while pd.isna(temp_const[idx-1-p]):
             p += 1
-        q = 0
-        while pd.isna(linear['imp_linear_const'][idx+nan_len+2+q]):
+        while pd.isna(temp_const[idx+nan_len+2+q]):
             q += 1
-        s = linear['imp_linear_const'][idx]
-        linear['imp_linear_const'][idx] = np.nan
-        li_temp = linear['imp_linear_const'][idx-1-p:idx+nan_len+2+q].interpolate(method='linear')
-        linear['imp_linear_const'][idx-1-p:idx+nan_len+2+q] = li_temp*(s/sum(li_temp.values))
+        s = temp_const[idx]
+        temp_const[idx] = np.nan
+        li_temp = temp_const[idx-1-p:idx+nan_len+2+q].interpolate(method='linear').loc[idx:idx+nan_len]
+        linear['imp_linear_const'][idx:idx+nan_len+1] = li_temp*(s/sum(li_temp.values))
+    print(f'{idx} ', end='')
 
-    linear['imp_linear_no-const'][idx:idx+nan_len+2] = linear['injected'][idx:idx+nan_len+2].interpolate(method='linear')
 df['imp_linear_const'] = linear['imp_linear_const'].copy()
 df['imp_linear_no-const'] = linear['imp_linear_no-const'].copy()
 
 df.to_csv('D:/2020_ETRI/201101_result_final.csv')
 
+
+############################################################
+# LINEAR INTERPOLATION ~ SPLINE
+# df = pd.read_csv('D:/2020_ETRI/201101_result_final.csv', index_col=0)
+nan_len = 5
+
+spline = df[{'values', 'injected', 'mask_detected'}].copy().reset_index(drop=True)
+spline['imp_spline_const'] = spline['injected'].copy()
+spline['imp_spline_no-const'] = spline['injected'].copy()
+
+print('***** SPLINE INTERPOLATION *****')
+# injection 바로 앞에 또 injection이 있는 경우에 이어서 하면 안 되잖아
+for idx in np.where((spline['mask_detected']==3)|(spline['mask_detected']==4))[0]:
+    temp_nocon, temp_const = spline['values'].copy(), spline['values'].copy()
+    temp_nocon[:idx], temp_const[:idx] = spline['values'][:idx], spline['values'][:idx]
+    # temp_nocon[:idx], temp_const[:idx] = spline['imp_spline_no-const'][:idx], spline['imp_spline_const'][:idx]
+    temp_nocon[idx:idx+nan_len+2], temp_const[idx:idx+nan_len+2] = spline['injected'][idx:idx+nan_len+2], spline['injected'][idx:idx+nan_len+2]
+
+    # w/o const
+    p, q = 24, 24
+    # while pd.isna(temp_nocon[idx-p]):
+    #     p += 1
+    # while pd.isna(temp_nocon[idx+nan_len+2+q]):
+    #     q += 1
+    spline['imp_spline_no-const'][idx+1:idx+nan_len+1] = temp_nocon[idx-p:idx+nan_len+2+q].interpolate(method='spline', order=3).loc[idx+1:idx+nan_len]
+
+    # w/ const
+    if spline['mask_detected'][idx] == 3:
+        p, q = 24, 24
+        # while pd.isna(temp_const[idx-p]):
+        #     p += 1
+        # while pd.isna(temp_const[idx+nan_len+2+q]):
+        #     q += 1
+        spline['imp_spline_const'][idx+1:idx+nan_len+1] = temp_const[idx-p:idx+nan_len+2+q].interpolate(method='spline', order=3).loc[idx+1:idx+nan_len]
+
+    else:   # 4
+        p, q = 24, 24
+        # while pd.isna(temp_const[idx-1-p]):
+        #     p += 1
+        # while pd.isna(temp_const[idx+nan_len+2+q]):
+        #     q += 1
+        s = temp_const[idx]
+        temp_const[idx] = np.nan
+        li_temp = temp_const[idx-1-p:idx+nan_len+2+q].interpolate(method='spline', order=3).loc[idx:idx+nan_len]
+        spline['imp_spline_const'][idx:idx+nan_len+1] = li_temp*(s/sum(li_temp.values))
+    print(f'{idx} ', end='')
+
+df['imp_spline_const'] = spline['imp_spline_const'].values.copy()
+df['imp_spline_no-const'] = spline['imp_spline_no-const'].values.copy()
+
+df.to_csv('D:/2020_ETRI/201101_result_final.csv')
 
 
 ############################################################
@@ -88,44 +152,63 @@ nan_len = 5
 
 # without outlier -> mask_inj == 3
 idx_3 = np.where(df['mask_detected']==3)[0]
-mae_3 = np.empty([len(idx_3), 4])
+mae_3 = np.empty([len(idx_3), 6])
 for i in range(len(idx_3)):
     idx = idx_3[i]
     mae1 = MAE(df['values'][idx+1:idx+nan_len+1].values, df['imp_const'][idx+1:idx+nan_len+1].values)
     mae2 = MAE(df['values'][idx+1:idx+nan_len+1].values, df['imp_no-const'][idx+1:idx+nan_len+1].values)
     mae3 = MAE(df['values'][idx+1:idx+nan_len+1].values, df['imp_linear_const'][idx+1:idx+nan_len+1].values)
     mae4 = MAE(df['values'][idx+1:idx+nan_len+1].values, df['imp_linear_no-const'][idx+1:idx+nan_len+1].values)
-    temp = [mae1, mae2, mae3, mae4]
+    mae5 = MAE(df['values'][idx+1:idx+nan_len+1].values, df['imp_spline_const'][idx+1:idx+nan_len+1].values)
+    mae6 = MAE(df['values'][idx+1:idx+nan_len+1].values, df['imp_spline_no-const'][idx+1:idx+nan_len+1].values)
+    temp = [mae1, mae2, mae3, mae4, mae5, mae6]
     mae_3[i, :] = temp
-# print(f'[joint w/, joint w/o, linear] = {np.nanmean(mae_3, axis=0)}')
+# print(f'[joint w/, joint w/o, li w/, li w/o] = {np.nanmean(mae_3, axis=0)}')
 
 
 # with outlier -> mask_inj == 4
 idx_4 = np.where(df['mask_detected']==4)[0]
-mae_4 = np.empty([len(idx_4), 4])
+mae_4 = np.empty([len(idx_4), 6])
 for i in range(len(idx_4)):
     idx = idx_4[i]
     mae1 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_const'][idx:idx+nan_len+1].values)
     mae2 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_no-const'][idx:idx+nan_len+1].values)
     mae3 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_linear_const'][idx:idx+nan_len+1].values)
     mae4 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_linear_no-const'][idx:idx+nan_len+1].values)
-    temp = [mae1, mae2, mae3, mae4]
+    mae5 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_spline_const'][idx:idx+nan_len+1].values)
+    mae6 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_spline_no-const'][idx:idx+nan_len+1].values)
+    temp = [mae1, mae2, mae3, mae4, mae5, mae6]
     mae_4[i, :] = temp
 
 
 # total
-mae_total = [MAE(df['values'][(df['mask_inj']==2)|(df['mask_detected']==4)].values, df['imp_const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values),
-             MAE(df['values'][(df['mask_inj']==2)|(df['mask_detected']==4)].values, df['imp_no-const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values),
-             MAE(df['values'][(df['mask_inj']==2)|(df['mask_detected']==4)].values, df['imp_linear_const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values),
-             MAE(df['values'][(df['mask_inj']==2)|(df['mask_detected']==4)].values, df['imp_linear_no-const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values)]
-# df['values'][(df['mask_inj']==2)|(df['mask_detected']==4)].values
-# df['imp_const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values
-# df['imp_no-const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values
-# df['imp_linear'][(df['mask_inj']==2)|(df['mask_detected']==4)].values
+# mae_total = [MAE(df['values'][(df['mask_inj']==2)|(df['mask_detected']==4)].values, df['imp_const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values),
+#              MAE(df['values'][(df['mask_inj']==2)|(df['mask_detected']==4)].values, df['imp_no-const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values),
+#              MAE(df['values'][(df['mask_inj']==2)|(df['mask_detected']==4)].values, df['imp_linear_const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values),
+#              MAE(df['values'][(df['mask_inj']==2)|(df['mask_detected']==4)].values, df['imp_linear_no-const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values),
+#              MAE(df['values'][(df['mask_inj']==2)|(df['mask_detected']==4)].values, df['imp_spline_const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values),
+#              MAE(df['values'][(df['mask_inj']==2)|(df['mask_detected']==4)].values, df['imp_spline_no-const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values)]
+idx_34 = np.where((df['mask_detected']==3)|(df['mask_detected']==4))[0]
+mae_34 = np.empty([len(idx_34), 6])
+for i in range(len(idx_34)):
+    idx = idx_34[i]
+    mae1 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_const'][idx:idx+nan_len+1].values)
+    mae2 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_no-const'][idx:idx+nan_len+1].values)
+    mae3 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_linear_const'][idx:idx+nan_len+1].values)
+    mae4 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_linear_no-const'][idx:idx+nan_len+1].values)
+    mae5 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_spline_const'][idx:idx+nan_len+1].values)
+    mae6 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_spline_no-const'][idx:idx+nan_len+1].values)
+    temp = [mae1, mae2, mae3, mae4, mae5, mae6]
+    mae_34[i, :] = temp
 
-print(f'w/o outlier cases [joint w/, joint w/o, linear w/, linear w/o] = {np.nanmean(mae_3, axis=0)}')
-print(f'w/  outlier cases [joint w/, joint w/o, linear w/, linear w/o] = {np.nanmean(mae_4, axis=0)}')
-print(f'            total [joint w/, joint w/o, linear w/, linear w/o] = {mae_total}')
+
+print(f'w/o outlier cases [joint w/, joint w/o, linear w/, linear w/o, spline w/, spline w/o]\n'
+      f'        = {np.nanmean(mae_3, axis=0)}')
+print(f'w/  outlier cases [joint w/, joint w/o, linear w/, linear w/o, spline w/, spline w/o]\n'
+      f'        = {np.nanmean(mae_4, axis=0)}')
+print(f'            total [joint w/, joint w/o, linear w/, linear w/o, spline w/, spline w/o]\n'
+      f'        = {np.nanmean(mae_34, axis=0)}')
+      # f'        = {mae_total}')
 
 
 ############################################################
@@ -191,7 +274,8 @@ plt.tight_layout()
 
 ############################################################
 # analyse results ~ line plot
-df = pd.read_csv('D:/2020_ETRI/201101_result_final.csv')
+# df = pd.read_csv('D:/2020_ETRI/201101_result_final.csv')
+df = pd.read_csv('D:/2020_ETRI/weird/201101_result_final.csv')
 nan_len = 5
 
 idx = np.where(df['mask_detected']==3)[0][0]
@@ -219,7 +303,7 @@ idx_0h = idx-h
 idx_23h = idx+(24-h)
 
 plt.rcParams.update({'font.size': 16})
-plt.figure(figsize=(6, 6), dpi=400)
+plt.figure(figsize=(6, 6), dpi=100)
 plt.plot(df['values'][idx_0h:idx_23h+1], '-bx', linewidth=1, markersize=12)
 plt.plot(np.arange(idx+1,idx+nan_len+1), df['imp_const'][idx+1:idx+nan_len+1], '-rd', linewidth=1, markersize=12)
 plt.plot(np.arange(idx+1,idx+nan_len+1), df['imp_linear_const'][idx+1:idx+nan_len+1], '-cP', linewidth=1, markersize=12)
@@ -237,37 +321,40 @@ plt.xlabel('Time [h]')
 plt.ylabel('Power [kW]')
 plt.legend(['Observed data', 'Joint Imp.', 'LI interp.'])
 plt.tight_layout()
-plt.savefig('Fig_line_(a).pdf', dpi=None, facecolor='w', edgecolor='w',
-            orientation='portrait', papertype=None, format='pdf',
-            transparent=False, bbox_inches=None, pad_inches=0.1,
-            frameon=None, metadata=None)
+# plt.savefig('Fig_line_(a).pdf', dpi=None, facecolor='w', edgecolor='w',
+#             orientation='portrait', papertype=None, format='pdf',
+#             transparent=False, bbox_inches=None, pad_inches=0.1,
+#             frameon=None, metadata=None)
 
 
 # without accumulated outlier
 for idx in np.where(df['mask_detected']==4)[0][4300:4350]:
     diff = MAE(df['values'][idx+1:idx+nan_len+1].values, df['imp_linear_const'][idx+1:idx+nan_len+1].values) - MAE(df['values'][idx+1:idx+nan_len+1].values, df['imp_const'][idx+1:idx+nan_len+1].values)
-    if diff >= 0.9:
+    if diff >= 0.1:
         print(idx, diff)
 
         plt.figure()
-        plt.plot(df['values'][idx:idx+nan_len+1], '-bx', linewidth=1, markersize=12)
-        plt.plot(df['imp_no-const'][idx:idx+nan_len+1], '-mv', linewidth=1, markersize=12)
-        plt.plot(df['imp_const'][idx:idx+nan_len+1], '-rd', linewidth=1, markersize=12)
-        plt.plot(df['imp_linear_const'][idx:idx+nan_len+1], '-cP', linewidth=1, markersize=12)
-        plt.plot(df['imp_linear_no-const'][idx:idx+nan_len+1], '-g*', linewidth=1, markersize=12)
-        # plt.ylim([0, 1.0])
+        plt.plot(df['values'][idx-5:idx+nan_len+1+5], '-bx', linewidth=1, markersize=12)
+        plt.plot(df['imp_no-const'][idx-5:idx+nan_len+1+5], '-mv', linewidth=1, markersize=12)
+        plt.plot(df['imp_const'][idx-5:idx+nan_len+1+5], '-rd', linewidth=1, markersize=12)
+        plt.plot(df['imp_linear_const'][idx-5:idx+nan_len+1+5], '-cP', linewidth=1, markersize=12)
+        plt.plot(df['imp_linear_no-const'][idx-5:idx+nan_len+1+5], '-g*', linewidth=1, markersize=12)
+        plt.plot([idx, idx], [0, 100], '--k', linewidth=.3)
+        plt.plot([idx+nan_len, idx+nan_len], [0, 100], '--k', linewidth=.3)
+        plt.ylim([0, 3])
         plt.xlabel('Time [h]')
         plt.ylabel('Power [kW]')
         plt.legend(['Observed data', 'Joint w/o const.', 'Joint w/ const.', 'LI w/ const.', 'LI w/o const.'])
 
+# df['imp_linear_no-const'] = df['imp_linear'].copy()
 
 idx = 50929
-# idx = 1218465
+# idx = 1213570
 h = int(df['Time'][idx][11:13])
 idx_0h = idx-h
 idx_23h = idx+(24-h)
 
-plt.figure(figsize=(6, 6), dpi=400)
+plt.figure(figsize=(6, 6), dpi=100)
 plt.plot(df['values'][idx_0h:idx_23h+1], '-bx', linewidth=1, markersize=12)
 plt.plot(np.arange(idx,idx+nan_len+1), df['imp_const'][idx:idx+nan_len+1], '-rd', linewidth=1, markersize=12)
 plt.plot(np.arange(idx,idx+nan_len+1), df['imp_no-const'][idx:idx+nan_len+1], '-mv', linewidth=1, markersize=12)
@@ -283,17 +370,18 @@ plt.ylim([0, 1.5])
 plt.xticks(ticks=[t for t in range(idx_0h, idx_23h+1, 6)], labels=[0, 6, 12, 18, 24])
 x_str = idx_0h if h<12 else idx_0h+12
 x_end = idx_0h+12 if h<12 else idx_23h
+plt.xlim([x_str-6, x_end-6])
 # plt.xlim([x_str+6, x_end+6])
-plt.xlim([x_str, x_end])
+# plt.xlim([x_str, x_end])
 
 plt.xlabel('Time [h]')
 plt.ylabel('Power [kW]')
 plt.legend(['Observed data', 'Joint w/ const.', 'Joint w/o const.', 'LI w/ const.', 'LI w/o const.', 'Outlier'], loc='upper right')
 plt.tight_layout()
-plt.savefig('Fig_line_(b).pdf', dpi=None, facecolor='w', edgecolor='w',
-            orientation='portrait', papertype=None, format='pdf',
-            transparent=False, bbox_inches=None, pad_inches=0.1,
-            frameon=None, metadata=None)
+# plt.savefig('Fig_line_(b).pdf', dpi=None, facecolor='w', edgecolor='w',
+#             orientation='portrait', papertype=None, format='pdf',
+#             transparent=False, bbox_inches=None, pad_inches=0.1,
+#             frameon=None, metadata=None)
 
 
 
@@ -352,4 +440,46 @@ plt.savefig('Fig_MAE (b).pdf', dpi=None, facecolor='w', edgecolor='w',
             orientation='portrait', papertype=None, format='pdf',
             transparent=False, bbox_inches=None, pad_inches=0.1,
             frameon=None, metadata=None)
+
+
+############################################################
+# idx = 50929에서 LI w/ const.가 좀 이상함. 증가하는 추세로 나와야하는데 플롯하면 감소하는 추세로 나옴
+# interpolation 제대로 된 건지 확인을 해봅시다.
+idx = 50929
+
+linear = df[{'values', 'injected', 'mask_detected'}].copy()
+linear['imp_linear_const'] = linear['injected'].copy()
+linear['imp_linear_no-const'] = linear['injected'].copy()
+
+temp_nocon, temp_const = linear['values'].copy(), linear['values'].copy()
+temp_nocon[:idx], temp_const[:idx] = linear['values'][:idx], linear['values'][:idx]
+temp_nocon[idx:idx+nan_len+2], temp_const[idx:idx+nan_len+2] = linear['injected'][idx:idx+nan_len+2], linear['injected'][idx:idx+nan_len+2]
+
+# w/o const
+p, q = 0, 0
+while pd.isna(temp_nocon[idx-p]):
+    p += 1
+while pd.isna(temp_nocon[idx+nan_len+2+q]):
+    q += 1
+linear['imp_linear_no-const'][idx:idx+nan_len+2] = temp_nocon[idx-p:idx+nan_len+2+q].interpolate(method='linear')
+
+# w/ const
+if linear['mask_detected'][idx] == 3:
+    p, q = 0, 0
+    while pd.isna(temp_const[idx-p]):
+        p += 1
+    while pd.isna(temp_const[idx+nan_len+2+q]):
+        q += 1
+    linear['imp_linear_const'][idx:idx+nan_len+2] = temp_const[idx-p:idx+nan_len+2+q].interpolate(method='linear')
+
+else:  # 4
+    p, q = 0, 0
+    while pd.isna(temp_const[idx-1-p]):
+        p += 1
+    while pd.isna(temp_const[idx+nan_len+2+q]):
+        q += 1
+    s = temp_const[idx]
+    temp_const[idx] = np.nan
+    li_temp = temp_const[idx-1-p:idx+nan_len+2+q].interpolate(method='linear').loc[idx:idx+nan_len]
+    linear['imp_linear_const'][idx:idx+nan_len+1] = li_temp*(s/sum(li_temp.values))
 
