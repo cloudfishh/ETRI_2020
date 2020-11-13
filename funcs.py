@@ -577,6 +577,14 @@ def similar_days(df, idx_target, weather, feature):
     diff_list = []
     for i in range(int(weather.shape[0]/24)):
         diff_list.append(sum(abs(feat_day.values-feat_col[24*i:24*(i+1)].values)))
+    diff = pd.DataFrame(diff_list, index=[24*d+15 for d in range(len(diff_list))]).sort_values(by=0)
+    diff['holiday'] = df['holiday'][diff.index]
+
+    plt.figure()
+    plt.plot(feat_day.values, linewidth=5)
+    for i in diff.index[1:60]:
+        plt.plot(feat_col[i-target_hour:i+(24-target_hour)].values)
+    plt.legend(diff.index[:60])
 
     pass
 

@@ -1,13 +1,15 @@
 """
-Accumulation detection with similar days
+Accumulation detection with nearest neighbor
  and fwd-bwd joint imputation with AR
-- length of NaN = 5 test
+- length of NaN 5 test
+- total 354 households, exist 234. have to run remaining 120 households.
 
-2020. 11. 11. Wed.
+2020. 11. 13. Fri.
 Soyeong Park
 """
 ##############################
 from funcs import *
+import os
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from matplotlib import pyplot as plt
 import seaborn as sns
@@ -17,7 +19,7 @@ from sklearn.metrics import confusion_matrix
 ##############################
 # 0. parameter setting
 # test_house_list = ['68181c16', '1dcb5feb', '2ac64232', '3b218da6', '6a638b96']
-test_house = '68181c16'
+# test_house = '1dcb5feb'
 f_fwd, f_bwd = 24, 24
 nan_len = 5
 
@@ -27,32 +29,24 @@ nan_len = 5
 data_raw = load_labeled()
 data, nan_data = clear_head(data_raw)
 
+# get the remaining households list
+list_files = np.array([l[7:15] for l in os.listdir('D:/2020_ETRI/result_201027') if l.endswith('.csv')])
+list_counts = np.array(np.unique(list_files, return_counts=True)).transpose()
+# list_weird = list_counts[:, 0][np.where(list_counts[:, 1] != '3')]
+
+list_all = data.columns.values
+list_exist = list_counts[:, 0][np.where(list_counts[:, 1] == '3')]
+list_haveto = list_all[np.invert(np.isin(list_all, list_exist))]
+
+
 threshold_df = pd.DataFrame([], columns=['test_house', 'thld'])
-for test_house in data.columns:
+for test_house in list_haveto:
     print(f'********** TEST HOUSE {test_house} start - {np.where(data.columns == test_house)[0][0]}th')
     data_col = data[test_house]
-    # calendar = load_calendar(2017, 2019)
-
+    calendar = load_calendar(2017, 2019)
     df = pd.DataFrame([], index=data_col.index)
     df['values'] = data_col.copy()
     df['nan'] = chk_nan_bfaf(data_col)
-    df['holiday'] = load_calendar(2017, 2019)[data_col.index[0]:data_col.index[-1]]
-    df['org_idx'] = np.arange(0, len(data_col))
-
-    weather = load_weather('incheon', 2017, 2019)[df.index[0][:16]:df.index[-1][:16]]
-    weather.index = df.index
-
-
-
-    # # # # #
-    # temporary codes
-    feature = weather.columns[0]
-    df['injected'], df['mask_inj'] = inject_nan_acc_nanlen(data_col, n_len=nan_len, p_nan=1, p_acc=0.25)
-    idx_list = np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]
-    idx_target = idx_list[0]
-    # # # # #
-
-
 
 
     ##############################
@@ -63,6 +57,8 @@ for test_house in data.columns:
     ##############################
     # 3. accumulation detection
     print(f'***** 1. detection : NEAREST')
+    df['holiday'] = calendar[data_col.index[0]:data_col.index[-1]]
+    df['org_idx'] = np.arange(0, len(data_col))
 
     idx_list = np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]
     nan_mask = df['nan'].copy()
@@ -71,17 +67,17 @@ for test_house in data.columns:
     sample_list, mean_list, std_list = list(), list(), list()
     for i in range(len(idx_list)):
         idx_target = idx_list[i]
-        sample, m, s = nearest_neighbor(data_col, df['nan'].copy(), idx_target, df['holiday'])
+        sample, m, s = nearest_neighbor(data_col, df['nan'].copy(), idx_target, calendar)
         sample_list.append(sample)
         mean_list.append(m)
         std_list.append(s)
     smlr_sample = pd.DataFrame(sample_list)
-    smlr_sample.to_csv(f'result_201027/201027_{test_house}_nan{nan_len}_nearest.csv')
+    smlr_sample.to_csv(f'result_201113/201027_{test_house}_nan{nan_len}_nearest.csv')
 
 
     # 3-2. z-score
     cand = df[(df['mask_inj'] == 3) | (df['mask_inj'] == 4)].copy()
-    detect_sample = pd.read_csv(f'result_201027/201027_{test_house}_nan{nan_len}_nearest.csv', index_col=0)
+    detect_sample = pd.read_csv(f'result_201113/201027_{test_house}_nan{nan_len}_nearest.csv', index_col=0)
     z_score = (cand['injected'].values - detect_sample.mean(axis=1)) / detect_sample.std(axis=1)
     df['z_score'] = pd.Series(z_score.values, index=df.index[np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]])
 
@@ -139,8 +135,8 @@ for test_house in data.columns:
         i += 1
         print(f'     * threshold test: {thld}')
 
-    detection_result.to_csv(f'result_201027/201027_{test_house}_nan{nan_len}_lossfunc.csv')
-    detection_result = pd.read_csv(f'result_201027/201027_{test_house}_nan{nan_len}_lossfunc.csv', index_col=0)
+    detection_result.to_csv(f'result_201113/201027_{test_house}_nan{nan_len}_lossfunc.csv')
+    detection_result = pd.read_csv(f'result_201113/201027_{test_house}_nan{nan_len}_lossfunc.csv', index_col=0)
 
     # plt.rcParams.update({'font.size': 14})
     # plt.figure(figsize=(6,4), dpi=400)
@@ -240,5 +236,5 @@ for test_house in data.columns:
         df['imp_no-const'][idx+1:idx+nan_len+1] = fcst_bidirec1
 
 
-    df.to_csv(f'201027_{test_house}_nan{nan_len}_result.csv')
+    df.to_csv(f'result_201113/201027_{test_house}_nan{nan_len}_result.csv')
     print(f'********** TEST HOUSE {test_house} end, saved successfully\n\n')
