@@ -578,15 +578,22 @@ def similar_days(df, idx_target, weather, feature):
     for i in range(int(weather.shape[0]/24)):
         diff_list.append(sum(abs(feat_day.values-feat_col[24*i:24*(i+1)].values)))
     diff = pd.DataFrame(diff_list, index=[24*d+15 for d in range(len(diff_list))]).sort_values(by=0)
-    diff['holiday'] = df['holiday'][diff.index]
+    diff['holiday'] = df['holiday'][diff.index].values
 
-    plt.figure()
-    plt.plot(feat_day.values, linewidth=5)
-    for i in diff.index[1:60]:
-        plt.plot(feat_col[i-target_hour:i+(24-target_hour)].values)
-    plt.legend(diff.index[:60])
+    # plt.figure()
+    # plt.plot(feat_day.values, linewidth=5)
+    # for i in diff.index[1:60]:
+    #     plt.plot(feat_col[i-target_hour:i+(24-target_hour)].values)
+    # plt.legend(diff.index[:60])
+    #
 
-    pass
+    # sample = []
+    # if diff[0].iloc[0] == 0:
+    #     sample.append()
+    # else:
+    #     sample.append()
+    sample = np.array([diff[0][x] for x in diff.index[:40] if diff['holiday'][x]==df['holiday'][idx_target]])
+    return sample, sample.mean(), sample.std()
 
 
 def inject_nan_imputation(d_col, n_mask, n_len=3):

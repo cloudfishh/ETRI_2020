@@ -31,7 +31,7 @@ threshold_df = pd.DataFrame([], columns=['test_house', 'thld'])
 for test_house in data.columns:
     print(f'********** TEST HOUSE {test_house} start - {np.where(data.columns == test_house)[0][0]}th')
     data_col = data[test_house]
-    # calendar = load_calendar(2017, 2019)
+    calendar = load_calendar(2017, 2019)
 
     df = pd.DataFrame([], index=data_col.index)
     df['values'] = data_col.copy()
@@ -44,13 +44,25 @@ for test_house in data.columns:
 
 
 
-    # # # # #
-    # temporary codes
-    feature = weather.columns[0]
-    df['injected'], df['mask_inj'] = inject_nan_acc_nanlen(data_col, n_len=nan_len, p_nan=1, p_acc=0.25)
-    idx_list = np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]
-    idx_target = idx_list[0]
-    # # # # #
+    # # # # # #
+    # # temporary codes
+    # feature = weather.columns[0]
+    # df['injected'], df['mask_inj'] = inject_nan_acc_nanlen(data_col, n_len=nan_len, p_nan=1, p_acc=0.25)
+    # idx_list = np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]
+    # idx_target = idx_list[0]    # holiday==0
+    # # idx_target = idx_list[17]   # holiday==1
+    #
+    # # holiday==0 이랑 1이랑 샘플 개수 알아보기
+    # for holi in [0, 1]:
+    #     print(f'** holi={holi}')
+    #     h = []
+    #     for idx_temp in [t for t in idx_list if df['holiday'][t]==holi]:
+    #         # sample, _, _ = nearest_neighbor(data_col, df['nan'].copy(), idx_temp, calendar)
+    #         sample, _, _ = similar_days(df, idx_temp, weather, weather.columns[0])
+    #         print(f'{sum(sample!=None)} ', end='')
+    #         h.append(sum(sample!=None))
+    #     print(f'** holi={holi}, # of samples mean={sum(h)/len(h)}\n')
+    # # # # # #
 
 
 
@@ -71,17 +83,17 @@ for test_house in data.columns:
     sample_list, mean_list, std_list = list(), list(), list()
     for i in range(len(idx_list)):
         idx_target = idx_list[i]
-        sample, m, s = nearest_neighbor(data_col, df['nan'].copy(), idx_target, df['holiday'])
+        sample, m, s = similar_days(df, idx_target, weather, weather.columns[0])
         sample_list.append(sample)
         mean_list.append(m)
         std_list.append(s)
     smlr_sample = pd.DataFrame(sample_list)
-    smlr_sample.to_csv(f'result_201027/201027_{test_house}_nan{nan_len}_nearest.csv')
+    smlr_sample.to_csv(f'result_201114_similar/201114_{test_house}_nan{nan_len}_nearest.csv')
 
 
     # 3-2. z-score
     cand = df[(df['mask_inj'] == 3) | (df['mask_inj'] == 4)].copy()
-    detect_sample = pd.read_csv(f'result_201027/201027_{test_house}_nan{nan_len}_nearest.csv', index_col=0)
+    detect_sample = pd.read_csv(f'result_201114_similar/201114_{test_house}_nan{nan_len}_nearest.csv', index_col=0)
     z_score = (cand['injected'].values - detect_sample.mean(axis=1)) / detect_sample.std(axis=1)
     df['z_score'] = pd.Series(z_score.values, index=df.index[np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]])
 
@@ -139,8 +151,8 @@ for test_house in data.columns:
         i += 1
         print(f'     * threshold test: {thld}')
 
-    detection_result.to_csv(f'result_201027/201027_{test_house}_nan{nan_len}_lossfunc.csv')
-    detection_result = pd.read_csv(f'result_201027/201027_{test_house}_nan{nan_len}_lossfunc.csv', index_col=0)
+    detection_result.to_csv(f'result_201114_similar/201114_{test_house}_nan{nan_len}_lossfunc.csv')
+    detection_result = pd.read_csv(f'result_201114_similar/201114_{test_house}_nan{nan_len}_lossfunc.csv', index_col=0)
 
     # plt.rcParams.update({'font.size': 14})
     # plt.figure(figsize=(6,4), dpi=400)
@@ -157,7 +169,7 @@ for test_house in data.columns:
     # # plt.title(f'{test_house}')
     # plt.tight_layout()
     # plt.savefig('Fig_loss.pdf')
-    # plt.savefig(f'result/{test_house}/201027_lossfunc_{test_house}_nan{nan_len}.png')
+    # plt.savefig(f'result/{test_house}/201114_lossfunc_{test_house}_nan{nan_len}.png')
 
     # threshold = 7.5     # DEEPAR
     # threshold = 3.4   # NEAREST
@@ -240,5 +252,5 @@ for test_house in data.columns:
         df['imp_no-const'][idx+1:idx+nan_len+1] = fcst_bidirec1
 
 
-    df.to_csv(f'201027_{test_house}_nan{nan_len}_result.csv')
+    df.to_csv(f'result_201114_similar/201114_{test_house}_nan{nan_len}_result.csv')
     print(f'********** TEST HOUSE {test_house} end, saved successfully\n\n')
