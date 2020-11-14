@@ -12,6 +12,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 from matplotlib import pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
+import time
 
 
 ##############################
@@ -29,6 +30,7 @@ data, nan_data = clear_head(data_raw)
 
 threshold_df = pd.DataFrame([], columns=['test_house', 'thld'])
 for test_house in data.columns:
+    start_time = time.time()
     print(f'********** TEST HOUSE {test_house} start - {np.where(data.columns == test_house)[0][0]}th')
     data_col = data[test_house]
     calendar = load_calendar(2017, 2019)
@@ -253,4 +255,4 @@ for test_house in data.columns:
 
 
     df.to_csv(f'result_201114_similar/201114_{test_house}_nan{nan_len}_result.csv')
-    print(f'********** TEST HOUSE {test_house} end, saved successfully\n\n')
+    print(f'********** TEST HOUSE {test_house} end, saved successfully / elasped time={time.time()-start_time:.3f}secs\n\n')
