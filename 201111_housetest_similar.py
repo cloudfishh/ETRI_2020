@@ -29,7 +29,9 @@ data_raw = load_labeled()
 data, nan_data = clear_head(data_raw)
 
 threshold_df = pd.DataFrame([], columns=['test_house', 'thld'])
-for test_house in data.columns:
+# for test_house in data.columns:
+for test_house in range(1):
+    test_house = '68181c16'
     start_time = time.time()
     print(f'********** TEST HOUSE {test_house} start - {np.where(data.columns == test_house)[0][0]}th')
     data_col = data[test_house]
