@@ -94,6 +94,57 @@ df['imp_linear_no-const'] = linear['imp_linear_no-const'].copy()
 df.to_csv('D:/2020_ETRI/201115_result_final.csv')
 
 
+############################################################
+# LINEAR INTERPOLATION ~ SPLINE
+# df = pd.read_csv('D:/2020_ETRI/201101_result_final.csv', index_col=0)
+nan_len = 5
+
+spline = df[{'values', 'injected', 'mask_detected'}].copy().reset_index(drop=True)
+spline['imp_spline_const'] = spline['injected'].copy()
+spline['imp_spline_no-const'] = spline['injected'].copy()
+
+print('***** SPLINE INTERPOLATION *****')
+# injection 바로 앞에 또 injection이 있는 경우에 이어서 하면 안 되잖아
+for idx in np.where((spline['mask_detected']==3)|(spline['mask_detected']==4))[0]:
+    temp_nocon, temp_const = spline['values'].copy(), spline['values'].copy()
+    temp_nocon[:idx], temp_const[:idx] = spline['values'][:idx], spline['values'][:idx]
+    # temp_nocon[:idx], temp_const[:idx] = spline['imp_spline_no-const'][:idx], spline['imp_spline_const'][:idx]
+    temp_nocon[idx:idx+nan_len+2], temp_const[idx:idx+nan_len+2] = spline['injected'][idx:idx+nan_len+2], spline['injected'][idx:idx+nan_len+2]
+
+    # w/o const
+    p, q = 24, 24
+    # while pd.isna(temp_nocon[idx-p]):
+    #     p += 1
+    # while pd.isna(temp_nocon[idx+nan_len+2+q]):
+    #     q += 1
+    spline['imp_spline_no-const'][idx+1:idx+nan_len+1] = temp_nocon[idx-p:idx+nan_len+2+q].interpolate(method='spline', order=3).loc[idx+1:idx+nan_len]
+
+    # w/ const
+    if spline['mask_detected'][idx] == 3:
+        p, q = 24, 24
+        # while pd.isna(temp_const[idx-p]):
+        #     p += 1
+        # while pd.isna(temp_const[idx+nan_len+2+q]):
+        #     q += 1
+        spline['imp_spline_const'][idx+1:idx+nan_len+1] = temp_const[idx-p:idx+nan_len+2+q].interpolate(method='spline', order=3).loc[idx+1:idx+nan_len]
+
+    else:   # 4
+        p, q = 24, 24
+        # while pd.isna(temp_const[idx-1-p]):
+        #     p += 1
+        # while pd.isna(temp_const[idx+nan_len+2+q]):
+        #     q += 1
+        s = temp_const[idx]
+        temp_const[idx] = np.nan
+        li_temp = temp_const[idx-1-p:idx+nan_len+2+q].interpolate(method='spline', order=3).loc[idx:idx+nan_len]
+        spline['imp_spline_const'][idx:idx+nan_len+1] = li_temp*(s/sum(li_temp.values))
+    print(f'{idx} ', end='')
+
+df['imp_spline_const'] = spline['imp_spline_const'].values.copy()
+df['imp_spline_no-const'] = spline['imp_spline_no-const'].values.copy()
+
+df.to_csv('D:/2020_ETRI/201101_result_final.csv')
+
 
 ############################################################
 # analyse results ~ accuracy
