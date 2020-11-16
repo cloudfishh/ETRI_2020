@@ -1,7 +1,6 @@
 """
 analyse the all results from whole households
- ~ NEAREST NEIGHBOR RESULT ~
-2020. 11. 15. Sun
+ 2020. 11. 15. Sun
 SYPark
 """
 import pandas as pd
@@ -31,6 +30,7 @@ def RMSE(A, B):
 ############################################################
 # 데이터 일단 다 붙여
 method = 'nearest'
+# method = 'similar'
 
 result_filelist = [f for f in os.listdir(f'D:/2020_ETRI/result_201115_total-{method}') if f.endswith('_result.csv')]
 df_concat = pd.DataFrame([])
@@ -41,12 +41,12 @@ for f in result_filelist:
     df_concat = pd.concat([df_concat, df_load], axis=0)
 
 df = df_concat.copy().reset_index(drop=True)
-df.to_csv('D:/2020_ETRI/201115_result_justconcat.csv')
+df.to_csv(f'D:/2020_ETRI/201115_result_{method}_justconcat.csv')
 
 
 ############################################################
 # LINEAR INTERPOLATION
-df = pd.read_csv('D:/2020_ETRI/201115_result_justconcat.csv')
+df = pd.read_csv(f'D:/2020_ETRI/201115_result_{method}_justconcat.csv')
 nan_len = 5
 
 linear = df[{'values', 'injected', 'mask_detected'}].copy()
@@ -91,12 +91,12 @@ for idx in np.where((linear['mask_detected']==3)|(linear['mask_detected']==4))[0
 df['imp_linear_const'] = linear['imp_linear_const'].copy()
 df['imp_linear_no-const'] = linear['imp_linear_no-const'].copy()
 
-df.to_csv('D:/2020_ETRI/201115_result_final.csv')
+df.to_csv(f'D:/2020_ETRI/201115_result_{method}_final.csv')
 
 
 ############################################################
 # LINEAR INTERPOLATION ~ SPLINE
-# df = pd.read_csv('D:/2020_ETRI/201101_result_final.csv', index_col=0)
+# df = pd.read_csv(f'D:/2020_ETRI/201115_result_{method}_final.csv', index_col=0)
 nan_len = 5
 
 spline = df[{'values', 'injected', 'mask_detected'}].copy().reset_index(drop=True)
@@ -143,12 +143,12 @@ for idx in np.where((spline['mask_detected']==3)|(spline['mask_detected']==4))[0
 df['imp_spline_const'] = spline['imp_spline_const'].values.copy()
 df['imp_spline_no-const'] = spline['imp_spline_no-const'].values.copy()
 
-df.to_csv('D:/2020_ETRI/201101_result_final.csv')
+df.to_csv(f'D:/2020_ETRI/201115_result_{method}_final.csv')
 
 
 ############################################################
 # analyse results ~ accuracy
-df = pd.read_csv('D:/2020_ETRI/201115_result_final.csv')
+df = pd.read_csv(f'D:/2020_ETRI/201115_result_{method}_final.csv')
 nan_len = 5
 
 # without outlier -> mask_inj == 3
@@ -196,7 +196,10 @@ print(f'            total [joint w/, joint w/o, linear w/, linear w/o] = {mae_to
 ############################################################
 # analyse results ~ confusion matrix
 # 1. proposed method
-df = pd.read_csv('D:/2020_ETRI/201115_result_final.csv')
+# method = 'nearest'
+method = 'similar'
+
+df = pd.read_csv(f'D:/2020_ETRI/201115_result_{method}_final.csv')
 
 idx_injected = np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]
 idx_detected_acc = np.where(df['mask_detected'] == 4)[0]
@@ -256,7 +259,7 @@ plt.tight_layout()
 
 ############################################################
 # analyse results ~ line plot
-df = pd.read_csv('D:/2020_ETRI/201115_result_final.csv')
+df = pd.read_csv(f'D:/2020_ETRI/201115_result_{method}_final.csv')
 nan_len = 5
 
 idx = np.where(df['mask_detected']==3)[0][0]
