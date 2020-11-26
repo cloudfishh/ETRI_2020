@@ -29,9 +29,13 @@ data_raw = load_labeled()
 data, nan_data = clear_head(data_raw)
 
 threshold_df = pd.DataFrame([], columns=['test_house', 'thld'])
-# for test_house in data.columns:
-for test_house in range(1):
-    test_house = '68181c16'
+iter = 0
+for test_house in data.columns:
+# for test_house in range(1):
+    if iter != 0:
+        list_file = len([l for l in os.listdir('/home/ubuntu/Documents/sypark/2020_ETRI/result_201114_similar') if l.startswith(f'201114_{test_house_before}')])
+        if list_file != 3:
+            test_house = test_house_before
     start_time = time.time()
     print(f'********** TEST HOUSE {test_house} start - {np.where(data.columns == test_house)[0][0]}th')
     data_col = data[test_house]
@@ -48,8 +52,8 @@ for test_house in range(1):
 
 
 
-    # # # # # #
-    # # temporary codes
+    # # # # # # #
+    # # # temporary codes
     # feature = weather.columns[0]
     # df['injected'], df['mask_inj'] = inject_nan_acc_nanlen(data_col, n_len=nan_len, p_nan=1, p_acc=0.25)
     # idx_list = np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]
@@ -66,7 +70,7 @@ for test_house in range(1):
     #         print(f'{sum(sample!=None)} ', end='')
     #         h.append(sum(sample!=None))
     #     print(f'** holi={holi}, # of samples mean={sum(h)/len(h)}\n')
-    # # # # # #
+    # # # # # # #
 
 
 
@@ -78,7 +82,7 @@ for test_house in range(1):
 
     ##############################
     # 3. accumulation detection
-    print(f'***** 1. detection : NEAREST')
+    print(f'***** 1. detection : SIMILAR DAYS')
 
     idx_list = np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]
     nan_mask = df['nan'].copy()
@@ -92,12 +96,12 @@ for test_house in range(1):
         mean_list.append(m)
         std_list.append(s)
     smlr_sample = pd.DataFrame(sample_list)
-    smlr_sample.to_csv(f'result_201114_similar/201114_{test_house}_nan{nan_len}_nearest.csv')
+    smlr_sample.to_csv(f'result_201114_similar/201114_{test_house}_nan{nan_len}_samples.csv')
 
 
     # 3-2. z-score
     cand = df[(df['mask_inj'] == 3) | (df['mask_inj'] == 4)].copy()
-    detect_sample = pd.read_csv(f'result_201114_similar/201114_{test_house}_nan{nan_len}_nearest.csv', index_col=0)
+    detect_sample = pd.read_csv(f'result_201114_similar/201114_{test_house}_nan{nan_len}_samples.csv', index_col=0)
     z_score = (cand['injected'].values - detect_sample.mean(axis=1)) / detect_sample.std(axis=1)
     df['z_score'] = pd.Series(z_score.values, index=df.index[np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]])
 
@@ -105,6 +109,7 @@ for test_house in range(1):
     detection_result = pd.DataFrame([], columns=['thld', 'MAE', 'MAE_no'])
     i = 0
     for thld in np.arange(0, 40, 0.1):
+    # for thld in np.arange(2, 6, 0.25):
         # detection
         idx_detected_nor = np.where(((df['mask_inj'] == 3) | (df['mask_inj'] == 4)) & (df['z_score'] < thld))[0]
         idx_detected_acc = np.where(((df['mask_inj'] == 3) | (df['mask_inj'] == 4)) & (df['z_score'] > thld))[0]
@@ -258,3 +263,8 @@ for test_house in range(1):
 
     df.to_csv(f'result_201114_similar/201114_{test_house}_nan{nan_len}_result.csv')
     print(f'********** TEST HOUSE {test_house} end, saved successfully / elasped time={time.time()-start_time:.3f}secs\n\n')
+
+    test_house_before = test_house
+    iter += 1
+
+

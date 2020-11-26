@@ -569,7 +569,6 @@ def similar_days(df, idx_target, weather, feature):
     # holiday도 고려하기
 
     # target idx가 속해있는 하루를 단위로 잡고 비슷한 '날'을 n개 가져오면 되겠지 일단
-
     feat_col = weather[feature]
     target_hour = int(weather.index[idx_target][11:13])
     # target_day = df['values'][idx_target-target_hour:idx_target+(24-target_hour)]
@@ -578,21 +577,22 @@ def similar_days(df, idx_target, weather, feature):
     for i in range(int(weather.shape[0]/24)):
         diff_list.append(sum(abs(feat_day.values-feat_col[24*i:24*(i+1)].values)))
     diff = pd.DataFrame(diff_list, index=[24*d+15 for d in range(len(diff_list))]).sort_values(by=0)
+    diff['Time'] = df.index[diff.index]
     diff['holiday'] = df['holiday'][diff.index].values
+    diff['nan'] = df['nan'][diff.index].values
+    # diff['values'] = df['values'][diff.index].values
 
     # plt.figure()
-    # plt.plot(feat_day.values, linewidth=5)
-    # for i in diff.index[1:60]:
-    #     plt.plot(feat_col[i-target_hour:i+(24-target_hour)].values)
-    # plt.legend(diff.index[:60])
-    #
+    # plt.plot(diff_notsort[0])
+    # plt.xticks(ticks=[x for x in range(0, weather.shape[0], 24*30)],
+    #            labels=[diff_notsort['Time'][x+15] for x in range(0, weather.shape[0]-15, 24*30)],
+    #            rotation=45)
+    # plt.tight_layout()
 
-    # sample = []
-    # if diff[0].iloc[0] == 0:
-    #     sample.append()
-    # else:
-    #     sample.append()
-    sample = np.array([diff[0][x] for x in diff.index[:40] if diff['holiday'][x]==df['holiday'][idx_target]])
+    # sample = np.array([diff[0][x] for x in diff.index[:40] if diff['holiday'][x]==df['holiday'][idx_target]])
+    sample = np.array([df['values'].iloc[x] for x in diff.index[:60]
+                       if (diff['holiday'][x]==df['holiday'][idx_target])&(diff['nan'][x]==0)])
+
     return sample, sample.mean(), sample.std()
 
 
@@ -656,7 +656,17 @@ def make_bidirectional_input(d_col, n_mask):
             train_x_fwd.append(d_col[idx_temp[0]-d:idx_temp[0]])
             train_x_bwd.append(d_col[idx_temp[-1]+1:idx_temp[-1]+(d+1)])
         i += 168
-    test_x_temp = np.append(d_col[idx_inj[0]-d:idx_inj[0]], d_col[idx_inj[-1]+1:idx_inj[-1]+(d+1)])
+
+    if idx_inj[0] < 24:
+        temp = np.zeros([24-idx_inj[0],])
+        temp[:] = np.nan
+        test_x_temp = np.append(np.append(temp, d_col[:idx_inj[0]].values), d_col[idx_inj[-1]+1:idx_inj[-1]+(d+1)])
+    elif idx_inj[-1] > (len(d_col)-24):
+        temp = np.zeros([idx_inj[-1]+24-len(d_col)+1,])
+        temp[:] = np.nan
+        test_x_temp = np.append(d_col[idx_inj[0]-d:idx_inj[0]], np.append(d_col[idx_inj[-1]+1:].values, temp))
+    else:
+        test_x_temp = np.append(d_col[idx_inj[0]-d:idx_inj[0]], d_col[idx_inj[-1]+1:idx_inj[-1]+(d+1)])
 
     train_x = np.append(np.array(train_x_fwd), np.array(train_x_bwd), axis=1)
     # train_y, test_x = np.array(train_y_temp), test_x_temp.reshape((1, len(test_x_temp)))

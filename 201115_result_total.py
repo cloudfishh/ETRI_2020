@@ -153,44 +153,63 @@ nan_len = 5
 
 # without outlier -> mask_inj == 3
 idx_3 = np.where(df['mask_detected']==3)[0]
-mae_3 = np.empty([len(idx_3), 4])
+mae_3 = np.empty([len(idx_3), 6])
 for i in range(len(idx_3)):
     idx = idx_3[i]
     mae1 = MAE(df['values'][idx+1:idx+nan_len+1].values, df['imp_const'][idx+1:idx+nan_len+1].values)
     mae2 = MAE(df['values'][idx+1:idx+nan_len+1].values, df['imp_no-const'][idx+1:idx+nan_len+1].values)
     mae3 = MAE(df['values'][idx+1:idx+nan_len+1].values, df['imp_linear_const'][idx+1:idx+nan_len+1].values)
     mae4 = MAE(df['values'][idx+1:idx+nan_len+1].values, df['imp_linear_no-const'][idx+1:idx+nan_len+1].values)
-    df_concat = [mae1, mae2, mae3, mae4]
-    mae_3[i, :] = df_concat
+    mae5 = MAE(df['values'][idx+1:idx+nan_len+1].values, df['imp_spline_const'][idx+1:idx+nan_len+1].values)
+    mae6 = MAE(df['values'][idx+1:idx+nan_len+1].values, df['imp_spline_no-const'][idx+1:idx+nan_len+1].values)
+    temp = [mae1, mae2, mae3, mae4, mae5, mae6]
+    mae_3[i, :] = temp
 # print(f'[joint w/, joint w/o, li w/, li w/o] = {np.nanmean(mae_3, axis=0)}')
 
 
 # with outlier -> mask_inj == 4
 idx_4 = np.where(df['mask_detected']==4)[0]
-mae_4 = np.empty([len(idx_4), 4])
+mae_4 = np.empty([len(idx_4), 6])
 for i in range(len(idx_4)):
     idx = idx_4[i]
     mae1 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_const'][idx:idx+nan_len+1].values)
     mae2 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_no-const'][idx:idx+nan_len+1].values)
     mae3 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_linear_const'][idx:idx+nan_len+1].values)
     mae4 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_linear_no-const'][idx:idx+nan_len+1].values)
-    df_concat = [mae1, mae2, mae3, mae4]
-    mae_4[i, :] = df_concat
+    mae5 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_spline_const'][idx:idx+nan_len+1].values)
+    mae6 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_spline_no-const'][idx:idx+nan_len+1].values)
+    temp = [mae1, mae2, mae3, mae4, mae5, mae6]
+    mae_4[i, :] = temp
 
 
 # total
-mae_total = [MAE(df['values'][(df['mask_inj']==2)|(df['mask_detected']==4)].values, df['imp_const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values),
-             MAE(df['values'][(df['mask_inj']==2)|(df['mask_detected']==4)].values, df['imp_no-const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values),
-             MAE(df['values'][(df['mask_inj']==2)|(df['mask_detected']==4)].values, df['imp_linear_const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values),
-             MAE(df['values'][(df['mask_inj']==2)|(df['mask_detected']==4)].values, df['imp_linear_no-const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values)]
-# df['values'][(df['mask_inj']==2)|(df['mask_detected']==4)].values
-# df['imp_const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values
-# df['imp_no-const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values
-# df['imp_linear'][(df['mask_inj']==2)|(df['mask_detected']==4)].values
+# mae_total = [MAE(df['values'][(df['mask_inj']==2)|(df['mask_detected']==4)].values, df['imp_const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values),
+#              MAE(df['values'][(df['mask_inj']==2)|(df['mask_detected']==4)].values, df['imp_no-const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values),
+#              MAE(df['values'][(df['mask_inj']==2)|(df['mask_detected']==4)].values, df['imp_linear_const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values),
+#              MAE(df['values'][(df['mask_inj']==2)|(df['mask_detected']==4)].values, df['imp_linear_no-const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values),
+#              MAE(df['values'][(df['mask_inj']==2)|(df['mask_detected']==4)].values, df['imp_spline_const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values),
+#              MAE(df['values'][(df['mask_inj']==2)|(df['mask_detected']==4)].values, df['imp_spline_no-const'][(df['mask_inj']==2)|(df['mask_detected']==4)].values)]
+idx_34 = np.where((df['mask_detected']==3)|(df['mask_detected']==4))[0]
+mae_34 = np.empty([len(idx_34), 6])
+for i in range(len(idx_34)):
+    idx = idx_34[i]
+    mae1 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_const'][idx:idx+nan_len+1].values)
+    mae2 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_no-const'][idx:idx+nan_len+1].values)
+    mae3 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_linear_const'][idx:idx+nan_len+1].values)
+    mae4 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_linear_no-const'][idx:idx+nan_len+1].values)
+    mae5 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_spline_const'][idx:idx+nan_len+1].values)
+    mae6 = MAE(df['values'][idx:idx+nan_len+1].values, df['imp_spline_no-const'][idx:idx+nan_len+1].values)
+    temp = [mae1, mae2, mae3, mae4, mae5, mae6]
+    mae_34[i, :] = temp
 
-print(f'w/o outlier cases [joint w/, joint w/o, linear w/, linear w/o] = {np.nanmean(mae_3, axis=0)}')
-print(f'w/  outlier cases [joint w/, joint w/o, linear w/, linear w/o] = {np.nanmean(mae_4, axis=0)}')
-print(f'            total [joint w/, joint w/o, linear w/, linear w/o] = {mae_total}')
+
+print(f'w/o outlier cases [joint w/, joint w/o, linear w/, linear w/o, spline w/, spline w/o]\n'
+      f'        = {np.nanmean(mae_3, axis=0)}')
+print(f'w/  outlier cases [joint w/, joint w/o, linear w/, linear w/o, spline w/, spline w/o]\n'
+      f'        = {np.nanmean(mae_4, axis=0)}')
+print(f'            total [joint w/, joint w/o, linear w/, linear w/o, spline w/, spline w/o]\n'
+      f'        = {np.nanmean(mae_34, axis=0)}')
+      # f'        = {mae_total}')
 
 
 ############################################################

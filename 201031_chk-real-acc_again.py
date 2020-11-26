@@ -17,21 +17,19 @@ import matplotlib.patches as patches
 
 ##############################
 # 1. 데이터 로드, nan 유무 저장
-# test_house = '68181c16'
+test_house = '68181c16'
 # test_house = '1dcb5feb'
 test_house_list = ['68181c16', '1dcb5feb', '2ac64232', '3b218da6', '6a638b96']
+data_raw = load_labeled()
+data, nan_data = clear_head(data_raw)
 
 plt.rcParams.update({'font.size': 14})
-fig, ax = plt.subplots(figsize=(6,4), dpi=400)
+fig, ax = plt.subplots(figsize=(6,4), dpi=100)
 
 
 for test_house in test_house_list:
-    data_raw = load_labeled()
-    data, nan_data = clear_head(data_raw)
     data_col = data[test_house]
-
     idx_nan = np.where(np.isnan(data_col.values) == True)[0]
-
     df = pd.DataFrame([],
                       index=pd.DatetimeIndex(data_col.index),
                       columns=['values', 'nan', 'nan_bfaf', 'candidate', 'nan_len', 'result', 'mean', 'std', 'sample_len', 'z-score'])

@@ -79,3 +79,48 @@ if __name__=='__main__':
     idx_list = np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0]
 
     cc.drop(columns=[0]).to_csv('result_deepar_separate_4weeks.csv')
+
+
+
+
+############################################################
+# analyse results ~ accuracy ~ detection 결과에 따라 4가지로 나눠서 계산
+col_list = ['imp_const', 'imp_no-const',
+            'imp_linear_const', 'imp_linear_no-const',
+            'imp_spline_const', 'imp_spline_no-const']
+
+idx_33 = np.where(df['mask_detected'] == 3)[0]
+obs_33 = np.array([df['values'][idx:idx+nan_len+1] for idx in idx_33]).reshape([len(idx_33)*6, ])
+mae_nor = np.empty([6, ])
+for i in range(6):
+    prd_3 = np.array([df[col_list[i]][idx:idx+nan_len+1] for idx in idx_33]).reshape([len(idx_33)*6, ])
+    mae_nor[i] = MAE(obs_33, np.nan_to_num(prd_3))
+
+idx_34 = np.where((df['mask_detected']==3)|(df['mask_detected'] == 4))[0]
+obs_34 = np.array([df['values'][idx:idx+nan_len+1] for idx in idx_34]).reshape([len(idx_34)*6, ])
+mae_tot = np.empty([6, ])
+for i in range(6):
+    prd_34 = np.array([df[col_list[i]][idx:idx+nan_len+1] for idx in idx_34]).reshape([len(idx_34)*6, ])
+    mae_tot[i] = MAE(obs_34, np.nan_to_num(prd_34))
+
+idx_43 = np.where(df['mask_detected'] == 4)[0]
+obs_43 = np.array([df['values'][idx:idx+nan_len+1] for idx in idx_43]).reshape([len(idx_43)*6, ])
+mae_acc = np.empty([6, ])
+for i in range(6):
+    prd_4 = np.array([df[col_list[i]][idx:idx+nan_len+1] for idx in idx_43]).reshape([len(idx_43)*6, ])
+    mae_acc[i] = MAE(obs_43, np.nan_to_num(prd_4))
+
+idx_44 = np.where(df['mask_detected'] == 3)[0]
+obs_44 = np.array([df['values'][idx:idx+nan_len+1] for idx in idx_44]).reshape([len(idx_44)*6, ])
+mae_nor = np.empty([6, ])
+for i in range(6):
+    prd_3 = np.array([df[col_list[i]][idx:idx+nan_len+1] for idx in idx_44]).reshape([len(idx_44)*6, ])
+    mae_nor[i] = MAE(obs_44, np.nan_to_num(prd_3))
+
+
+print(f'w/o outlier cases [joint w/, joint w/o, linear w/, linear w/o, spline w/, spline w/o]\n'
+      f'        = {mae_nor}')
+print(f'w/  outlier cases [joint w/, joint w/o, linear w/, linear w/o, spline w/, spline w/o]\n'
+      f'        = {mae_acc}')
+print(f'            total [joint w/, joint w/o, linear w/, linear w/o, spline w/, spline w/o]\n'
+      f'        = {mae_tot}')

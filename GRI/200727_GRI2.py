@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from matplotlib import pyplot as plt
+import matplotlib.font_manager as fm
 
 
 def make_date_index(y1, y2):
@@ -26,12 +27,12 @@ def make_date_index(y1, y2):
 def load_data():
     dir = 'D:/2020_GRI/200727'
     building = ['dasan', 'dorm_A', 'dorm_B', 'f_apt', 'GIST_A', 'GIST_B', 'GIST_C', 'plant', 'RISE', 'SU2']
-    feature = ['cloud', 'cloudlow', 'humid', 'rain', 'setemp', 'snow', 'solarirr', 'surftemp', 'temp', 'windirec', 'windspeed']
+    feature = ['cloud', 'cloudlow', 'humid', 'rain', 'snow', 'solarirr', 'temp', 'windspeed']
 
     load = pd.DataFrame()
     for b in building:
         temp = pd.read_csv(f'{dir}/2018GIST_{b}.csv', header=None)
-        v = temp.stack(dropna=False).reset_index()[0]
+        v = temp.transpose().stack(dropna=False).reset_index()[0]
         new = np.array([])
         for i in range(0, 96*365, 4):
             new = np.append(new, sum(v[i:i+4]))
@@ -40,24 +41,42 @@ def load_data():
     weather = pd.DataFrame()
     for f in feature:
         temp = pd.read_csv(f'{dir}/2018weather_{f}.csv', header=None)
-        v = temp.stack(dropna=False).reset_index()[0]
+        v = temp.transpose().stack(dropna=False).reset_index()[0]
         weather[f] = v
+    # weather.columns = ['전운량', '중하층운량', '습도', '강수량', '이슬점온도', '적설량', '일사', '지면온도', '기온', '풍향', '풍속']
     return load, weather
+
+
+##############################
+# matplotlib font setting
+font_dir = 'C:/Windows/Fonts/malgun.ttf'
+font_name = fm.FontProperties(fname=font_dir).get_name()
+plt.rcParams.update({'font.size': 13,
+                     'font.family': font_name})
 
 
 ##############################
 # get importance scores
 # building = ['dasan', 'dorm_A', 'dorm_B', 'f_apt', 'GIST_A', 'GIST_B', 'GIST_C', 'plant', 'RISE', 'SU2']
 # building = ['dasan', 'dorm_A', 'f_apt', 'RISE']
-building = ['f_apt', 'RISE']
-load, weather = load_data()
+building = ['dorm_A', 'dasan']
+load, weather_raw = load_data()
 # test_bldg = 'dasan'
+
+
+# weather_val = weather_raw.fillna(0).values
+weather_val = weather_raw.interpolate(method='linear').fillna(0).values
+weather = np.zeros([weather_raw.shape[0], weather_raw.shape[1]])
+for col in range(weather_raw.shape[1]):
+    weather[:, col] = (weather_val[:, col] - weather_val[:, col].mean())/weather_val[:, col].std()
+
 
 for t in range(len(building)):
     test_bldg = building[t]
     ##############################
     # define dataset
-    X, y = weather.fillna(0).values, load[test_bldg].fillna(0).values
+    # X, y = weather_val, (load[test_bldg].fillna(0).values - load[test_bldg].fillna(0).values.mean())/load[test_bldg].fillna(0).values.std()
+    X, y = weather_val, load[test_bldg].fillna(0).values
     corr = np.array([])
     for i in range(X.shape[1]):
         c = np.corrcoef(X[:, i], y)
@@ -83,15 +102,17 @@ for t in range(len(building)):
     plt.rcParams.update({'font.size': 13})
     plt.figure(1)
     plt.bar([x+(-0.2+0.4*t) for x in range(len(importance))], importance, label=test_bldg, width=0.5)
-    plt.title('Importance Score')
-    plt.xticks(ticks=range(len(weather.columns)), labels=weather.columns.values, rotation=45)
+    # plt.title('Importance Score')
+    plt.xticks(ticks=range(weather_raw.shape[1]), labels=['전운량', '중하층운량', '습도', '강수량', '적설량', '일사', '기온', '풍속'], rotation=45)
+    plt.ylabel('Gini importance')
     plt.legend()
     plt.tight_layout()
 
     plt.figure(2)
     plt.bar([x+(-0.2+0.4*t) for x in range(len(corr))], abs(corr), label=test_bldg, width=0.5)
-    plt.title('Correlation Coefficient')
-    plt.xticks(ticks=range(len(weather.columns)), labels=weather.columns.values, rotation=45)
+    # plt.title('Correlation Coefficient')
+    plt.xticks(ticks=range(weather_raw.shape[1]), labels=['전운량', '중하층운량', '습도', '강수량', '적설량', '일사', '기온', '풍속'], rotation=45)
+    plt.ylabel('Correlation coefficient')
     plt.legend()
     plt.tight_layout()
 
