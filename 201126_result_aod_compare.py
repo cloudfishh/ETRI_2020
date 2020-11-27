@@ -34,42 +34,43 @@ def smape(A, F):
 
 ############################################################
 # load results
-nan_len = 5
-df = pd.read_csv('D:/202010_energies/201125_result_aodsc.csv', index_col=0)
+# nan_len = 5
+# df = pd.read_csv('D:/202010_energies/201125_result_aodsc.csv', index_col=0)
 
 
 ############################################################
 # load OWA
-# filename = [f for f in os.listdir('D:/202010_energies/201124_compare') if f.endswith('.npz')]
-# fn = filename[0]
-# val = np.load('D:/202010_energies/201124_compare/'+fn, allow_pickle=True)['Value']  # key => home index
+# house_idx = np.unique(df['house'], return_index=True)[1]
+# house_list = [df['house'][idx] for idx in sorted(house_idx)]
+#
+# # house = house_list[0]
+# comp = np.zeros([df.shape[0], 7])
+# for h in range(len(house_list)):
+#     house = house_list[h]
+#     val = np.load(f'D:/202010_energies/201125_compare_owa/MARS_OWA_{house}.npz')['OWA1']
+#     comp[h*19896:(h+1)*19896, :] = val
+#
+# # col 4=vanilla, 5=aod, 6=aodsc
+# df['owa'] = comp[:, 4]
+# df['owa_aod'] = comp[:, 5]
+# df['owa_aodsc'] = comp[:, 6]
+#
+# df.to_csv('D:/202010_energies/201125_result_aodsc+owa.csv')
 
-# house_list = np.unique(df['house'])
-house_idx = np.unique(df['house'], return_index=True)[1]
-house_list = [df['house'][idx] for idx in sorted(house_idx)]
 
-# house = house_list[0]
-comp = np.zeros([df.shape[0], 6])
-for h in range(len(house_list)):
-    house = house_list[h]
-    val = np.load(f'D:/202010_energies/201125_compare_owa/MARS_OWA_{house}.npz')['Value']
-    comp[h*19896:(h+1)*19896, :] = val
-
-# col 4=vanilla, 5=aod, 6=aodsc
-df['owa'] = comp[:, 4]
-df['owa_aod'] = comp[:, 5]
-df['owa_aodsc'] = comp[:, 5]
-
-df.to_csv('D:/202010_energies/20115_result_aodsc+owa.csv')
-
+# df = pd.read_csv('D:/202010_energies/201125_result_aodsc+owa.csv')
+# df_new = df.drop(columns=[{'Unnamed: 0', 'imp_const', 'imp_no-const', }])
 
 ############################################################
 # analyse results ~ accuracy ~ detection 결과에 따라 4가지로 나눠서 계산
+nan_len = 5
+# df = pd.read_csv('D:/202010_energies/201125_result_aodsc+owa.csv')
+df = pd.read_csv('D:/202010_energies/201125_result_aodsc+owa_spline-rev.csv')
+
 col_list = ['values', 'mask_inj', 'mask_detected',
-             'joint', 'joint_aod', 'joint_aodsc',
+             'joint', 'joint_aod', 'joint_aod_sc',
             'linear', 'linear_aod', 'linear_aodsc',
             'spline', 'spline_aod', 'spline_aodsc',
-            'mars', 'mars_aod', 'mars_aodsc',
             'owa', 'owa_aod', 'owa_aodsc']
 case_list = col_list[3:]
 num_case = len(case_list)
@@ -105,6 +106,15 @@ for i in range(num_case):
     prd_44 = np.array([df_cut[case_list[i]][idx:idx+nan_len+1] for idx in idx_44]).reshape([len(idx_44)*6, ])
     mae_44[i] = MAE(obs_44, prd_44)
 
+idx_tot = np.where((df_cut['mask_inj']==3)|(df_cut['mask_inj']==4))[0]
+obs_tot = np.array([df_cut['values'][idx:idx+nan_len+1] for idx in idx_tot]).reshape([len(idx_tot)*6, ])
+mae_tot = np.empty([num_case, ])
+for i in range(num_case):
+    prd_tot = np.array([df_cut[case_list[i]][idx:idx+nan_len+1] for idx in idx_tot]).reshape([len(idx_tot)*6, ])
+    mae_tot[i] = MAE(obs_tot, prd_tot)
+
+np.savez('D:/202010_energies/201126_MAEs.npz', mae_33=mae_33, mae_34=mae_34, mae_43=mae_43, mae_44=mae_44, mae_tot=mae_tot)
+
 print('* detected nor.')
 print(f' True negative {case_list}\n'
       f'             = {mae_33}')
@@ -114,52 +124,237 @@ print('* detected acc. ')
 print(f'False positive {case_list}\n'
       f'             = {mae_34}')
 print(f' True positive {case_list}\n'
-      f'             = {mae_44}')
+      f'             = {mae_44}\n')
+print(f'         TOTAL {case_list}\n'
+      f'             = {mae_tot}\n')
 
-print('* total')
-print(f'{case_list}\n')
-print(f'= [{MAE(df_cut["values"].values, df_cut["imp_const"].values), MAE(df_cut["values"].values, df_cut["imp_no-const"].values)}, ', end='')
-print(f'{MAE(df_cut["values"].values, df_cut["imp_linear_const"].values)}, {MAE(df_cut["values"].values, df_cut["imp_linear_no-const"].values)}, ', end='')
-print(f'{MAE(df_cut["values"].values, df_cut["imp_spline_const"].values)}, {MAE(df_cut["values"].values, df_cut["imp_spline_no-const"].values)}, ', end='')
-print(f'{MAE(df_cut["values"].values, df_cut["imp_mars_const"].values)}, {MAE(df_cut["values"].values, df_cut["imp_mars_no-const"].values)}, ', end='')
-print(f'{MAE(df_cut["values"].values, df_cut["imp_owa_const"].values)}, {MAE(df_cut["values"].values, df_cut["imp_owa_no-const"].values)}]', end='')
+
+# ############################################################
+# # analyse results ~ accuracy ~ 통째로 모아서 계산 (시퀀스 하나로 만듦)
+# col_list = ['values', 'mask_inj', 'mask_detected',
+#              'joint', 'joint_aod', 'joint_aodsc',
+#             'linear', 'linear_aod', 'linear_aodsc',
+#             'spline', 'spline_aod', 'spline_aodsc',
+#             'mars', 'mars_aod', 'mars_aodsc',
+#             'owa', 'owa_aod', 'owa_aodsc']
+# case_list = col_list[3:]
+# num_case = len(case_list)
+#
+# idx_3 = np.where(df['mask_detected']==3)[0]
+# obs_3 = np.array([df['values'][idx+1:idx+nan_len+1] for idx in idx_3]).reshape([len(idx_3)*5,])
+# mae_3 = np.empty([num_case, ])
+# for i in range(num_case):
+#     prd_3 = np.array([df[col_list[i]][idx+1:idx+nan_len+1] for idx in idx_3]).reshape([len(idx_3)*5,])
+#     mae_3[i] = MAE(obs_3, np.nan_to_num(prd_3))
+#
+# idx_4 = np.where(df['mask_detected']==4)[0]
+# obs_4 = np.array([df['values'][idx:idx+nan_len+1] for idx in idx_4]).reshape([len(idx_4)*6,])
+# mae_4 = np.empty([num_case, ])
+# for i in range(num_case):
+#     prd_4 = np.array([df[col_list[i]][idx:idx+nan_len+1] for idx in idx_4]).reshape([len(idx_4)*6,])
+#     mae_4[i] = MAE(obs_4, np.nan_to_num(prd_4))
+#
+# idx_tot = np.where((df['mask_detected']==3)|(df['mask_detected'] == 4))[0]
+# obs_tot = np.array([df['values'][idx:idx+nan_len+1] for idx in idx_tot]).reshape([len(idx_tot)*6, ])
+# mae_tot = np.empty([num_case, ])
+# for i in range(num_case):
+#     prd_34 = np.array([df[col_list[i]][idx:idx+nan_len+1] for idx in idx_tot]).reshape([len(idx_tot)*6, ])
+#     mae_tot[i] = MAE(obs_tot, np.nan_to_num(prd_34))
+#
+# print(f'w/o outlier cases {case_list}\n'
+#       f'        = {mae_3}')
+# print(f'w/  outlier cases {case_list}\n'
+#       f'        = {mae_4}')
+# print(f'            total {case_list}\n'
+#       f'        = {mae_tot}')
+
+
+
+##############################
+# Bar Chart
+mae = np.load('D:/202010_energies/201126_MAEs.npz')
+# mae_tot = mae['mae_tot']
+cases = ['mae_33', 'mae_34', 'mae_43', 'mae_44', 'mae_tot']
+titles = ['True negative', 'False negative', 'False negative', 'True positive', 'Total']
+
+bar_width = 0.2
+alpha = 0.5
+index = np.arange(4)
+
+for case in ['mae_43', 'mae_44', 'mae_tot']:
+    mae_temp = mae[case]
+    mae_vanilla = [mae_temp[x] for x in range(0, 12, 3)]
+    mae_aod = [mae_temp[x+1] for x in range(0, 12, 3)]
+    mae_aodsc = [mae_temp[x+2] for x in range(0, 12, 3)]
+
+    plt.rcParams.update({'font.size': 16})
+    plt.figure(figsize=(8,5), dpi=400)
+    p1 = plt.bar(index, mae_vanilla,
+                 bar_width, color='r', alpha=alpha, label='Vanilla')
+    p2 = plt.bar(index + bar_width, mae_aod,
+                 bar_width, color='g', alpha=alpha, label='AOD')
+    # p3 = plt.bar(index + bar_width*2, mae_aodsc,
+    #              bar_width, color='b', alpha=alpha, label='AOD-SC')
+
+    # plt.title(titles[i])
+    plt.ylabel('MAE [kW]', fontsize=18)
+    plt.xlabel('Methods', fontsize=18)
+    plt.xticks(index+bar_width, ['Joint', 'Linear', 'Spline', 'OWA'], fontsize=15)
+    # plt.legend((p1[0], p2[0], p3[0]), ('Vanilla', 'AOD', 'AOD-SC'), fontsize=15)
+    plt.legend((p1[0], p2[0]), ('Vanilla', 'AOD'), fontsize=15)
+    plt.tight_layout()
+    plt.savefig(f'D:/202010_energies/Fig_{case}.pdf', dpi=None, facecolor='w', edgecolor='w',
+            orientation='portrait', papertype=None, format='pdf',
+            transparent=False, bbox_inches=None, pad_inches=0.1,
+            frameon=None, metadata=None)
+
+for case in ['mae_33', 'mae_34']:
+    mae_temp = mae[case]
+    mae_vanilla = [mae_temp[x] for x in range(0, 12, 3)]
+    # mae_aod = [mae_temp[x+1] for x in range(0, 12, 3)]
+    # mae_aodsc = [mae_temp[x+2] for x in range(0, 12, 3)]
+
+    plt.rcParams.update({'font.size': 16})
+    plt.figure(figsize=(8,5), dpi=400)
+    p1 = plt.bar(index, mae_vanilla,
+                 bar_width*2, color='r', alpha=alpha, label='Vanilla')
+    # p2 = plt.bar(index + bar_width, mae_aod,
+    #              bar_width, color='g', alpha=alpha, label='AOD')
+    # p3 = plt.bar(index + bar_width*2, mae_aodsc,
+    #              bar_width, color='b', alpha=alpha, label='AOD-SC')
+
+    # plt.title(titles[i])
+    plt.ylabel('MAE [kW]', fontsize=18)
+    plt.xlabel('Methods', fontsize=18)
+    plt.xticks(index, ['Joint', 'Linear', 'Spline', 'OWA'], fontsize=15)
+    # plt.legend((p1[0], p2[0], p3[0]), ('Vanilla', 'AOD', 'AOD-SC'), fontsize=15)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(f'D:/202010_energies/Fig_{case}.pdf', dpi=None, facecolor='w', edgecolor='w',
+            orientation='portrait', papertype=None, format='pdf',
+            transparent=False, bbox_inches=None, pad_inches=0.1,
+            frameon=None, metadata=None)
 
 
 ############################################################
-# analyse results ~ accuracy ~ 통째로 모아서 계산 (시퀀스 하나로 만듦)
-col_list = ['values', 'mask_inj', 'mask_detected',
-             'joint', 'joint_aod', 'joint_aodsc',
-            'linear', 'linear_aod', 'linear_aodsc',
-            'spline', 'spline_aod', 'spline_aodsc',
-            'mars', 'mars_aod', 'mars_aodsc',
-            'owa', 'owa_aod', 'owa_aodsc']
-case_list = col_list[3:]
-num_case = len(case_list)
+# analyse results ~ line plot
+idx = np.where(df['mask_detected']==3)[0][0]
 
-idx_3 = np.where(df['mask_detected']==3)[0]
-obs_3 = np.array([df['values'][idx+1:idx+nan_len+1] for idx in idx_3]).reshape([len(idx_3)*5,])
-mae_3 = np.empty([num_case, ])
-for i in range(num_case):
-    prd_3 = np.array([df[col_list[i]][idx+1:idx+nan_len+1] for idx in idx_3]).reshape([len(idx_3)*5,])
-    mae_3[i] = MAE(obs_3, np.nan_to_num(prd_3))
+# without accumulated outlier
+for idx in np.where(df['mask_detected']==3)[0][360:400]:
+    diff = MAE(df['values'][idx+1:idx+nan_len+1].values, df['imp_linear_const'][idx+1:idx+nan_len+1].values) - MAE(df['values'][idx+1:idx+nan_len+1].values, df['imp_const'][idx+1:idx+nan_len+1].values)
+    if diff >= 0.04:
+        print(idx, diff)
 
-idx_4 = np.where(df['mask_detected']==4)[0]
-obs_4 = np.array([df['values'][idx:idx+nan_len+1] for idx in idx_4]).reshape([len(idx_4)*6,])
-mae_4 = np.empty([num_case, ])
-for i in range(num_case):
-    prd_4 = np.array([df[col_list[i]][idx:idx+nan_len+1] for idx in idx_4]).reshape([len(idx_4)*6,])
-    mae_4[i] = MAE(obs_4, np.nan_to_num(prd_4))
+        plt.figure()
+        plt.plot(df['values'][idx+1:idx+nan_len+1], '-bx', linewidth=1, markersize=10)
+        plt.plot(df['joint'][idx+1:idx+nan_len+1], '-ro', linewidth=1, markersize=10)
+        plt.plot(df['owa'][idx+1:idx+nan_len+1], '-cP', linewidth=1, markersize=10)
+        plt.plot(df['linear'][idx+1:idx+nan_len+1], '-gd', linewidth=1, markersize=10)
+        plt.plot(df['spline'][idx+1:idx+nan_len+1], '-m*', linewidth=1, markersize=10)
 
-idx_tot = np.where((df['mask_detected']==3)|(df['mask_detected'] == 4))[0]
-obs_tot = np.array([df['values'][idx:idx+nan_len+1] for idx in idx_tot]).reshape([len(idx_tot)*6, ])
-mae_tot = np.empty([num_case, ])
-for i in range(num_case):
-    prd_34 = np.array([df[col_list[i]][idx:idx+nan_len+1] for idx in idx_tot]).reshape([len(idx_tot)*6, ])
-    mae_tot[i] = MAE(obs_tot, np.nan_to_num(prd_34))
+        plt.ylim([0, 1.0])
+        plt.xlabel('Time [h]')
+        plt.ylabel('Power [kW]')
+        plt.legend(['Observed data', 'Joint', 'OWA', 'Linear', 'Spline'])
 
-print(f'w/o outlier cases {case_list}\n'
-      f'        = {mae_3}')
-print(f'w/  outlier cases {case_list}\n'
-      f'        = {mae_4}')
-print(f'            total {case_list}\n'
-      f'        = {mae_tot}')
+
+idx = 30277
+# 31621 35564
+h = int(df['Time'][idx][11:13])
+idx_0h = idx-h
+idx_23h = idx+(24-h)
+# idx_23h = idx+(24-h)+6
+
+plt.rcParams.update({'font.size': 16})
+plt.figure(figsize=(8, 6), dpi=400)
+plt.plot(df['values'][idx_0h:idx_23h+1], '-bx', linewidth=1, markersize=10)
+plt.plot(np.arange(idx+1,idx+nan_len+1), df['joint'][idx+1:idx+nan_len+1], '-ro', linewidth=1, markersize=10)
+plt.plot(np.arange(idx+1,idx+nan_len+1), df['owa'][idx+1:idx+nan_len+1], '-cP', linewidth=1, markersize=12)
+plt.plot(np.arange(idx+1,idx+nan_len+1), df['linear'][idx+1:idx+nan_len+1], '-gd', linewidth=1, markersize=12)
+plt.plot(np.arange(idx+1,idx+nan_len+1), df['spline'][idx+1:idx+nan_len+1], '-m*', linewidth=1, markersize=16)
+
+plt.plot([idx+1, idx+1], [0, 100], '--k', linewidth=.3)
+plt.plot([idx+nan_len, idx+nan_len], [0, 100], '--k', linewidth=.3)
+plt.ylim([0, 1])
+
+plt.xticks(ticks=[t for t in range(idx_0h, idx_23h+1, 6)], labels=[0, 6, 12, 18, 24, 0])
+x_str = idx_0h if h<12 else idx_0h+12
+x_end = idx_0h+12 if h<12 else idx_23h
+plt.xlim([x_str, x_end])
+# plt.xlim([idx_0h+18, idx_23h])
+
+plt.xlabel('Time [h]')
+plt.ylabel('Power [kW]')
+plt.legend(['Observed data', 'Joint', 'OWA', 'Linear', 'Spline'])
+plt.tight_layout()
+plt.savefig('Fig_line_(a).pdf', dpi=None, facecolor='w', edgecolor='w',
+            orientation='portrait', papertype=None, format='pdf',
+            transparent=False, bbox_inches=None, pad_inches=0.1,
+            frameon=None, metadata=None)
+
+
+# with accumulated outlier
+for idx in np.where(df['mask_detected']==4)[0][10000:10030]:
+    diff = MAE(df['values'][idx+1:idx+nan_len+1].values, df['imp_linear_const'][idx+1:idx+nan_len+1].values) - MAE(df['values'][idx+1:idx+nan_len+1].values, df['imp_const'][idx+1:idx+nan_len+1].values)
+    if diff >= 0.02:
+        print(idx, diff)
+
+        plt.figure(figsize=(7, 5))
+        plt.plot(df['values'][idx:idx+nan_len+1], '-bx', linewidth=1, markersize=10)
+        plt.plot(df['joint_aod'][idx:idx+nan_len+1], '-ro', linewidth=1, markersize=10)
+        plt.plot(df['owa_aod'][idx:idx+nan_len+1], '-cP', linewidth=1, markersize=10)
+        plt.plot(df['linear_aod'][idx:idx+nan_len+1], '-gd', linewidth=1, markersize=10)
+        plt.plot(df['spline_aod'][idx:idx+nan_len+1], '-m*', linewidth=1, markersize=10)
+        # plt.plot(df['values'][idx-5:idx+nan_len+1+5], '-bx', linewidth=1, markersize=10)
+        # plt.plot(df['joint'][idx-5:idx+nan_len+1+5], '-mv', linewidth=1, markersize=10)
+        # plt.plot(df['joint_aod'][idx-5:idx+nan_len+1+5], '-rd', linewidth=1, markersize=10)
+        # plt.plot(df['owa'][idx-5:idx+nan_len+1+5], '-cP', linewidth=1, markersize=10)
+        # plt.plot(df['owa_aod'][idx-5:idx+nan_len+1+5], '-g*', linewidth=1, markersize=10)
+        # plt.plot(df['linear'][idx-5:idx+nan_len+1+5], '-y.', linewidth=1, markersize=10)
+        # plt.plot(df['linear_aod'][idx-5:idx+nan_len+1+5], '-^', linewidth=1, markersize=10, color='orange')
+        plt.plot([idx, idx], [0, 100], '--k', linewidth=.3)
+        plt.plot([idx+nan_len, idx+nan_len], [0, 100], '--k', linewidth=.3)
+        plt.ylim([0, 4])
+        plt.xlabel('Time [h]')
+        plt.ylabel('Power [kW]')
+        plt.legend(['Observed data',  'Joint-AOD', 'OWA-AOD', 'Linear-AOD', 'Spline-AOD'])
+
+
+idx = 2789811
+# 2788250 2789811
+h = int(df['Time'][idx][11:13])
+idx_0h = idx-h
+idx_23h = idx+(24-h)
+# idx_23h = idx+(24-h)+6
+
+plt.figure(figsize=(8, 6), dpi=400)
+plt.plot(df['values'][idx_0h:idx_23h+1], '-bx', linewidth=1, markersize=12)
+plt.plot(np.arange(idx,idx+nan_len+1), df['joint_aod'][idx:idx+nan_len+1], '-ro', linewidth=1, markersize=10)
+plt.plot(np.arange(idx,idx+nan_len+1), df['owa_aod'][idx:idx+nan_len+1], '-cP', linewidth=1, markersize=12)
+plt.plot(np.arange(idx,idx+nan_len+1), df['linear_aod'][idx:idx+nan_len+1], '-gd', linewidth=1, markersize=12)
+plt.plot(np.arange(idx,idx+nan_len+1), df['spline_aod'][idx:idx+nan_len+1], '-m*', linewidth=1, markersize=16)
+plt.plot(idx, df['injected'][idx], 'ks', linewidth=.7, markersize=12)
+
+plt.plot([idx, idx], [0, 100], '--k', linewidth=.3)
+plt.plot([idx+nan_len, idx+nan_len], [0, 100], '--k', linewidth=.3)
+
+plt.ylim([0, 2.5])
+
+plt.xticks(ticks=[t for t in range(idx_0h, idx_23h+1, 6)], labels=[0, 6, 12, 18, 24, 0])
+# plt.xticks(ticks=[t for t in range(idx_0h, idx_23h+1, 3)], labels=[0, 3, 6, 9, 12, 15, 18, 21, 24])
+x_str = idx_0h if h<12 else idx_0h+12
+x_end = idx_0h+12 if h<12 else idx_23h
+# plt.xlim([x_str+6, x_end+6])
+plt.xlim([x_str, x_end])
+# plt.xlim([idx_0h+18, idx_23h])
+
+plt.xlabel('Time [h]')
+plt.ylabel('Power [kW]')
+plt.legend(['Observed data', 'Joint-AOD', 'OWA-AOD', 'Linear-AOD', 'Spline-AOD', 'Outlier'], loc='upper right')
+plt.tight_layout()
+plt.savefig('Fig_line_(b).pdf', dpi=None, facecolor='w', edgecolor='w',
+            orientation='portrait', papertype=None, format='pdf',
+            transparent=False, bbox_inches=None, pad_inches=0.1,
+            frameon=None, metadata=None)
+

@@ -162,7 +162,7 @@ for idx in np.where((spline['mask_detected'] == 3) | (spline['mask_detected'] ==
     print(f'{idx} ', end='')
 
 df['spline'] = spline['spline'].values.copy()
-df['spline_aod'] = spline['spline'].values.copy()
+df['spline_aod'] = spline['spline_aod'].values.copy()
 df['spline_aodsc'] = spline['spline_aodsc'].values.copy()
 print('**          - SPLINE finished')
 
