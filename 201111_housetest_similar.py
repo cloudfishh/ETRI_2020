@@ -161,7 +161,7 @@ for test_house in data.columns:
         print(f'     * threshold test: {thld}')
 
     detection_result.to_csv(f'result_201114_similar/201114_{test_house}_nan{nan_len}_lossfunc.csv')
-    detection_result = pd.read_csv(f'result_201114_similar/201114_{test_house}_nan{nan_len}_lossfunc.csv', index_col=0)
+    detection_result = pd.read_csv(f'D:/2020_ETRI/result_201115_total-nearest/201027_{test_house}_nan{nan_len}_lossfunc.csv', index_col=0)
 
     # plt.rcParams.update({'font.size': 14})
     # plt.figure(figsize=(6,4), dpi=400)
@@ -169,7 +169,7 @@ for test_house in data.columns:
     # plt.plot(detection_result['thld'], detection_result['MAE_no'])
     # plt.axvline(x=detection_result['thld'][detection_result['MAE']==detection_result['MAE'].min()].values[0], color='r',
     #             linewidth=1, linestyle='--')
-    # plt.legend(['w/ const.', 'w/o const.', 'threshold'], loc='lower right')
+    # plt.legend(['w/ AOD-AI', 'w/o AOD-AI', 'threshold'], loc='lower right')
     # plt.xlabel('z-score')
     # plt.ylabel('total MAE')
     # plt.xlim([0, 40])

@@ -181,7 +181,7 @@ bar_width = 0.2
 alpha = 0.5
 index = np.arange(4)
 
-for case in ['mae_43', 'mae_44', 'mae_tot']:
+for case in ['mae_34', 'mae_44', 'mae_tot']:
     mae_temp = mae[case]
     mae_vanilla = [mae_temp[x] for x in range(0, 12, 3)]
     mae_aod = [mae_temp[x+1] for x in range(0, 12, 3)]
@@ -192,7 +192,7 @@ for case in ['mae_43', 'mae_44', 'mae_tot']:
     p1 = plt.bar(index, mae_vanilla,
                  bar_width, color='r', alpha=alpha, label='Vanilla')
     p2 = plt.bar(index + bar_width, mae_aod,
-                 bar_width, color='g', alpha=alpha, label='AOD')
+                 bar_width, color='g', alpha=alpha, label='AOD-AI')
     # p3 = plt.bar(index + bar_width*2, mae_aodsc,
     #              bar_width, color='b', alpha=alpha, label='AOD-SC')
 
@@ -201,14 +201,17 @@ for case in ['mae_43', 'mae_44', 'mae_tot']:
     plt.xlabel('Methods', fontsize=18)
     plt.xticks(index+bar_width, ['Joint', 'Linear', 'Spline', 'OWA'], fontsize=15)
     # plt.legend((p1[0], p2[0], p3[0]), ('Vanilla', 'AOD', 'AOD-SC'), fontsize=15)
-    plt.legend((p1[0], p2[0]), ('Vanilla', 'AOD'), fontsize=15)
+    if case == 'mae_34':
+        plt.yticks(ticks=[y for y in np.arange(0.1, 0.35, 0.05)], labels=[np.round(y, 2) for y in np.arange(0.1, 0.35, 0.05)])
+        plt.ylim([0.1, 0.3])
+    plt.legend((p1[0], p2[0]), ('Vanilla', 'AOD-AI'), fontsize=15)
     plt.tight_layout()
-    plt.savefig(f'D:/202010_energies/Fig_{case}.pdf', dpi=None, facecolor='w', edgecolor='w',
+    plt.savefig(f'Fig_{case}.pdf', dpi=None, facecolor='w', edgecolor='w',
             orientation='portrait', papertype=None, format='pdf',
             transparent=False, bbox_inches=None, pad_inches=0.1,
             frameon=None, metadata=None)
 
-for case in ['mae_33', 'mae_34']:
+for case in ['mae_33', 'mae_43']:
     mae_temp = mae[case]
     mae_vanilla = [mae_temp[x] for x in range(0, 12, 3)]
     # mae_aod = [mae_temp[x+1] for x in range(0, 12, 3)]
@@ -228,9 +231,14 @@ for case in ['mae_33', 'mae_34']:
     plt.xlabel('Methods', fontsize=18)
     plt.xticks(index, ['Joint', 'Linear', 'Spline', 'OWA'], fontsize=15)
     # plt.legend((p1[0], p2[0], p3[0]), ('Vanilla', 'AOD', 'AOD-SC'), fontsize=15)
+    if case == 'mae_33':
+        # plt.yticks(ticks=[y for y in np.arange(0.1, 0.35, 0.05)], labels=[np.round(y, 2) for y in np.arange(0.1, 0.35, 0.05)])
+        plt.ylim([0.04, 0.16])
+    elif case == 'mae_43':
+        plt.ylim([0, 0.5])
     plt.legend()
     plt.tight_layout()
-    plt.savefig(f'D:/202010_energies/Fig_{case}.pdf', dpi=None, facecolor='w', edgecolor='w',
+    plt.savefig(f'Fig_{case}.pdf', dpi=None, facecolor='w', edgecolor='w',
             orientation='portrait', papertype=None, format='pdf',
             transparent=False, bbox_inches=None, pad_inches=0.1,
             frameon=None, metadata=None)
@@ -268,11 +276,11 @@ idx_23h = idx+(24-h)
 
 plt.rcParams.update({'font.size': 16})
 plt.figure(figsize=(8, 6), dpi=400)
-plt.plot(df['values'][idx_0h:idx_23h+1], '-bx', linewidth=1, markersize=10)
-plt.plot(np.arange(idx+1,idx+nan_len+1), df['joint'][idx+1:idx+nan_len+1], '-ro', linewidth=1, markersize=10)
-plt.plot(np.arange(idx+1,idx+nan_len+1), df['owa'][idx+1:idx+nan_len+1], '-cP', linewidth=1, markersize=12)
-plt.plot(np.arange(idx+1,idx+nan_len+1), df['linear'][idx+1:idx+nan_len+1], '-gd', linewidth=1, markersize=12)
-plt.plot(np.arange(idx+1,idx+nan_len+1), df['spline'][idx+1:idx+nan_len+1], '-m*', linewidth=1, markersize=16)
+plt.plot(df['values'][idx_0h:idx_23h+1], '-bx', linewidth=2, markersize=10)
+plt.plot(np.arange(idx+1,idx+nan_len+1), df['joint'][idx+1:idx+nan_len+1], '-ro', linewidth=2, markersize=10)
+plt.plot(np.arange(idx+1,idx+nan_len+1), df['owa'][idx+1:idx+nan_len+1], '-.cP', linewidth=2, markersize=12)
+plt.plot(np.arange(idx+1,idx+nan_len+1), df['linear'][idx+1:idx+nan_len+1], '--gd', linewidth=2, markersize=12)
+plt.plot(np.arange(idx+1,idx+nan_len+1), df['spline'][idx+1:idx+nan_len+1], ':m*', linewidth=2, markersize=16)
 
 plt.plot([idx+1, idx+1], [0, 100], '--k', linewidth=.3)
 plt.plot([idx+nan_len, idx+nan_len], [0, 100], '--k', linewidth=.3)
@@ -318,7 +326,7 @@ for idx in np.where(df['mask_detected']==4)[0][10000:10030]:
         plt.ylim([0, 4])
         plt.xlabel('Time [h]')
         plt.ylabel('Power [kW]')
-        plt.legend(['Observed data',  'Joint-AOD', 'OWA-AOD', 'Linear-AOD', 'Spline-AOD'])
+        plt.legend(['Observed data',  'Joint AOD-AI', 'OWA AOD-AI', 'Linear AOD-AI', 'Spline AOD-AI'])
 
 
 idx = 2789811
@@ -329,11 +337,11 @@ idx_23h = idx+(24-h)
 # idx_23h = idx+(24-h)+6
 
 plt.figure(figsize=(8, 6), dpi=400)
-plt.plot(df['values'][idx_0h:idx_23h+1], '-bx', linewidth=1, markersize=12)
-plt.plot(np.arange(idx,idx+nan_len+1), df['joint_aod'][idx:idx+nan_len+1], '-ro', linewidth=1, markersize=10)
-plt.plot(np.arange(idx,idx+nan_len+1), df['owa_aod'][idx:idx+nan_len+1], '-cP', linewidth=1, markersize=12)
-plt.plot(np.arange(idx,idx+nan_len+1), df['linear_aod'][idx:idx+nan_len+1], '-gd', linewidth=1, markersize=12)
-plt.plot(np.arange(idx,idx+nan_len+1), df['spline_aod'][idx:idx+nan_len+1], '-m*', linewidth=1, markersize=16)
+plt.plot(df['values'][idx_0h:idx_23h+1], '-bx', linewidth=2, markersize=12)
+plt.plot(np.arange(idx,idx+nan_len+1), df['joint_aod'][idx:idx+nan_len+1], '-ro', linewidth=2, markersize=10)
+plt.plot(np.arange(idx,idx+nan_len+1), df['owa_aod'][idx:idx+nan_len+1], '-.cP', linewidth=2, markersize=12)
+plt.plot(np.arange(idx,idx+nan_len+1), df['linear_aod'][idx:idx+nan_len+1], '--gd', linewidth=2, markersize=12)
+plt.plot(np.arange(idx,idx+nan_len+1), df['spline_aod'][idx:idx+nan_len+1], ':m*', linewidth=2, markersize=16)
 plt.plot(idx, df['injected'][idx], 'ks', linewidth=.7, markersize=12)
 
 plt.plot([idx, idx], [0, 100], '--k', linewidth=.3)
@@ -351,7 +359,7 @@ plt.xlim([x_str, x_end])
 
 plt.xlabel('Time [h]')
 plt.ylabel('Power [kW]')
-plt.legend(['Observed data', 'Joint-AOD', 'OWA-AOD', 'Linear-AOD', 'Spline-AOD', 'Outlier'], loc='upper right')
+plt.legend(['Observed data', 'Joint AOD-AI', 'OWA AOD-AI', 'Linear AOD-AI', 'Spline AOD-AI', 'Outlier'], loc='upper right')
 plt.tight_layout()
 plt.savefig('Fig_line_(b).pdf', dpi=None, facecolor='w', edgecolor='w',
             orientation='portrait', papertype=None, format='pdf',

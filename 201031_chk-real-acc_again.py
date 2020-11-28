@@ -222,9 +222,9 @@ p4 = plt.bar(index+width*2, nd[4, :]*100,
 # plt.title(titles[i])
 plt.ylabel('Ratio [%]', fontsize=18)
 plt.xlabel('Length of NaNs', fontsize=18)
-plt.xticks(index, [1, 2, 3, 4, 5, 6, 7, 8, 'average'], fontsize=15)
+plt.xticks(index, [1, 2, 3, 4, 5, 6, 7, 8, 'average'])
 # plt.legend((p1[0], p2[0], p3[0]), ('Vanilla', 'AOD', 'AOD-SC'), fontsize=15)
-plt.legend((p0[0], p1[0], p2[0], p3[0], p4[0], avg), ('house1', 'house2', 'house3', 'house4', 'house5', 'total average'), fontsize=15)
+plt.legend((p0[0], p1[0], p2[0], p3[0], p4[0], avg), ('house1', 'house2', 'house3', 'house4', 'house5', 'total average'))
 plt.tight_layout()
 plt.savefig('Fig_observed_ratio.pdf', dpi=None, facecolor='w', edgecolor='w',
             orientation='portrait', papertype=None, format='pdf',
