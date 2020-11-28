@@ -61,6 +61,7 @@ for test_house in data.columns[:10]:
 z = np.array(z)
 
 
+##############################
 z = np.load('D:/202010_energies/normalized_residue_analysis.npy')
 
 nor = np.random.normal(0, 1, size=100000)
@@ -71,6 +72,7 @@ y  = np.exp(-(x ** 2))
 y /= (0.01 * y).sum()
 cy = np.cumsum(0.01 * y)
 
+plt.rcParams.update({'font.size': 16})
 fig, ax = plt.subplots(figsize=(6,4), dpi=200)
 ax.hist(z, bins=bins, density=True, histtype='step', cumulative=True, label='Result from nearest neighbor', linestyle='--', color='r')
 plt.plot(x, norm.cdf(x, 0, 1), 'k--', linewidth=1.5, label='Normal distribution')
@@ -82,7 +84,8 @@ plt.ylabel('Empirical CDF')
 plt.legend(loc='lower right')
 
 
-fig, ax = plt.subplots(figsize=(6,4), dpi=200)
+plt.rcParams.update({'font.size': 16})
+fig, ax = plt.subplots(figsize=(6,4), dpi=400)
 ax.hist(z, bins=bins, density=True, histtype='step', cumulative=False, label='Result from nearest neighbor', linestyle='--', color='r', linewidth=1.5)
 plt.plot(x, norm.pdf(x, 0, 1), 'k--', linewidth=1.5, label='Normal distribution')
 # ax.plot(x, cy, 'k--', linewidth=1.5, label='Normal distribution')
@@ -91,3 +94,8 @@ plt.ylim([0, 0.5])
 plt.xlabel('Standard score')
 plt.ylabel('Empirical PDF')
 plt.legend(loc='lower right')
+plt.savefig('Fig_NRA.pdf', dpi=None, facecolor='w', edgecolor='w',
+            orientation='portrait', papertype=None, format='pdf',
+            transparent=False, bbox_inches=None, pad_inches=0.1,
+            frameon=None, metadata=None)
+

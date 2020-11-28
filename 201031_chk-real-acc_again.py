@@ -27,6 +27,7 @@ plt.rcParams.update({'font.size': 14})
 fig, ax = plt.subplots(figsize=(6,4), dpi=100)
 
 
+num_acc_array = np.empty([len(test_house_list), 20])
 for test_house in test_house_list:
     data_col = data[test_house]
     idx_nan = np.where(np.isnan(data_col.values) == True)[0]
@@ -104,15 +105,21 @@ for test_house in test_house_list:
     df['result'], df['mean'], df['std'], df['sample_len'], df['z-score']\
         = result, mean, std, sample_len, z_score
 
+    df.to_csv(f'201127_chk-real-acc_{test_house}.csv')
+
     # print(f'    total: {sum(df["candidate"])}')
     # print(f'z-score 3: {sum( (df["z-score"]>3)&(df["candidate"]==1) )}')
     # print(f'z-score 4: {sum( (df["z-score"]>4)&(df["candidate"]==1) )}')
+    num_acc = np.empty([20,])
     print(f'***** {test_house}, z-score>3 depending on nan_len')
     for i in range(1, 21):
         if len(df["nan_len"][df["nan_len"]==i]) != 0:
             print(f'   nan_len={i:02}: { len(df["nan_len"][(df["nan_len"]==i)&(df["z-score"]>3)])/len(df["nan_len"][df["nan_len"]==i]) }')
+            num_acc[i-1] = len(df["nan_len"][(df["nan_len"]==i)&(df["z-score"]>3)])/len(df["nan_len"][df["nan_len"]==i])
         else:
             print(f'   nan_len={i:02}: len( z-score>3 ) = 0')
+            num_acc[i-1] = 0
+    num_acc_array[np.where(np.isin(test_house_list, test_house))[0][0], :] = num_acc
     print('\n')
 
     ##############################
@@ -125,7 +132,6 @@ for test_house in test_house_list:
     plt.ylabel('z-score')
     # plt.title(f'{test_house}')
     # plt.tight_layout()
-    # break
 
 
 # fig, ax = plt.subplots(figsize=(6,4), dpi=100)
@@ -136,7 +142,7 @@ ell = patches.Ellipse(xy=(8.5, 25), width=60, height=10, angle=80, linewidth=1, 
 ax.add_patch(ell)
 plt.legend(['house 1', 'house 2', 'house 3', 'house 4', 'house 5'])
 plt.tight_layout()
-plt.savefig('Fig_observed.pdf')
+# plt.savefig('Fig_observed.pdf')
 
 # plt.plot(plot_df['num'], plot_df['val'], '.')
 # plt.plot(plot_mean['num'], plot_mean['val'], color='tomato', linewidth=1)
@@ -169,3 +175,58 @@ plt.savefig('Fig_observed.pdf')
 # for keys, values in sorted(count.items()):
 #     if keys != 0:
 #         print(f'{keys}: {values}')
+
+
+##############################
+plt.rcParams.update({'font.size': 14})
+fig, ax = plt.subplots(figsize=(6,4), dpi=400)
+for test_house in test_house_list:
+    df = pd.read_csv(f'201127_chk-real-acc_{test_house}.csv', index_col=0)
+    plt.plot(df['nan_len'][df['nan_len']!=0], df['z-score'][df['nan_len']!=0], '.')
+    plt.xlim([-1, 25])
+    plt.xlabel('length of NaNs')
+    plt.ylabel('z-score')
+
+plt.ylim([-13, 55])
+plt.grid(alpha=0.2)
+ell = patches.Ellipse(xy=(10, 27), width=50, height=13, angle=78, linewidth=1, facecolor='b', alpha=0.2)
+ax.add_patch(ell)
+plt.legend(['house 1', 'house 2', 'house 3', 'house 4', 'house 5'])
+plt.tight_layout()
+plt.savefig('Fig_observed.pdf')
+
+
+##############################
+nd_raw = np.load('201127_chk-real-acc_numacc.npy')
+nd = nd_raw[:, :8]
+nd = np.concatenate([nd, nd.mean(axis=1).reshape([5,1])], axis=1)
+
+width = 0.125
+alpha = 0.5
+index = np.arange(9)
+
+plt.rcParams.update({'font.size': 16})
+plt.figure(figsize=(9, 6), dpi=400)
+avg = plt.axhline(y=nd[:, -1].mean()*100, color='k', linestyle=':', alpha=0.5)
+p0 = plt.bar(index-width*2, nd[0, :]*100,
+             width, color='r', alpha=alpha, label='0')
+p1 = plt.bar(index-width*1, nd[1, :]*100,
+             width, color='g', alpha=alpha, label='1')
+p2 = plt.bar(index, nd[2, :]*100,
+             width, color='b', alpha=alpha, label='2')
+p3 = plt.bar(index+width*1, nd[3, :]*100,
+             width, color='m', alpha=alpha, label='3')
+p4 = plt.bar(index+width*2, nd[4, :]*100,
+             width, color='c', alpha=alpha, label='4')
+
+# plt.title(titles[i])
+plt.ylabel('Ratio [%]', fontsize=18)
+plt.xlabel('Length of NaNs', fontsize=18)
+plt.xticks(index, [1, 2, 3, 4, 5, 6, 7, 8, 'average'], fontsize=15)
+# plt.legend((p1[0], p2[0], p3[0]), ('Vanilla', 'AOD', 'AOD-SC'), fontsize=15)
+plt.legend((p0[0], p1[0], p2[0], p3[0], p4[0], avg), ('house1', 'house2', 'house3', 'house4', 'house5', 'total average'), fontsize=15)
+plt.tight_layout()
+plt.savefig('Fig_observed_ratio.pdf', dpi=None, facecolor='w', edgecolor='w',
+            orientation='portrait', papertype=None, format='pdf',
+            transparent=False, bbox_inches=None, pad_inches=0.1,
+            frameon=None, metadata=None)
