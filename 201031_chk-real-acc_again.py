@@ -185,7 +185,7 @@ for test_house in test_house_list:
     plt.plot(df['nan_len'][df['nan_len']!=0], df['z-score'][df['nan_len']!=0], '.')
     plt.xlim([-1, 25])
     plt.xlabel('length of NaNs')
-    plt.ylabel('z-score')
+    plt.ylabel('z-score of outlier candidates')
 
 plt.ylim([-13, 55])
 plt.grid(alpha=0.2)

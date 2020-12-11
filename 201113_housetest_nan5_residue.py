@@ -19,7 +19,7 @@ from sklearn.metrics import confusion_matrix
 ##############################
 # 0. parameter setting
 # test_house_list = ['68181c16', '1dcb5feb', '2ac64232', '3b218da6', '6a638b96']
-# test_house = '1dcb5feb'
+test_house = '68181c16'
 f_fwd, f_bwd = 24, 24
 nan_len = 5
 

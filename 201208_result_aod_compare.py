@@ -31,41 +31,11 @@ def smape(A, F):
     return 100 / len(A) * np.sum(2 * np.abs(F - A) / (np.abs(A) + np.abs(F)))
 
 
-
-############################################################
-# load results
-# nan_len = 5
-# df = pd.read_csv('D:/202010_energies/201125_result_aodsc.csv', index_col=0)
-
-
-############################################################
-# load OWA
-# house_idx = np.unique(df['house'], return_index=True)[1]
-# house_list = [df['house'][idx] for idx in sorted(house_idx)]
-#
-# # house = house_list[0]
-# comp = np.zeros([df.shape[0], 7])
-# for h in range(len(house_list)):
-#     house = house_list[h]
-#     val = np.load(f'D:/202010_energies/201125_compare_owa/MARS_OWA_{house}.npz')['OWA1']
-#     comp[h*19896:(h+1)*19896, :] = val
-#
-# # col 4=vanilla, 5=aod, 6=aodsc
-# df['owa'] = comp[:, 4]
-# df['owa_aod'] = comp[:, 5]
-# df['owa_aodsc'] = comp[:, 6]
-#
-# df.to_csv('D:/202010_energies/201125_result_aodsc+owa.csv')
-
-
-# df = pd.read_csv('D:/202010_energies/201125_result_aodsc+owa.csv')
-# df_new = df.drop(columns=[{'Unnamed: 0', 'imp_const', 'imp_no-const', }])
-
 ############################################################
 # analyse results ~ accuracy ~ detection 결과에 따라 4가지로 나눠서 계산
 nan_len = 5
-# df = pd.read_csv('D:/202010_energies/201125_result_aodsc+owa.csv')
-df = pd.read_csv('D:/202010_energies/201125_result_aodsc+owa_spline-rev.csv')
+# df = pd.read_csv('D:/202010_energies/201125_result_aodsc+owa_spline-rev.csv')
+df = pd.read_csv('D:/202010_energies/201207_result_aodsc+owa_spline-rev-again.csv')
 
 col_list = ['values', 'mask_inj', 'mask_detected',
              'joint', 'joint_aod', 'joint_aod_sc',
@@ -113,20 +83,22 @@ for i in range(num_case):
     prd_tot = np.array([df_cut[case_list[i]][idx:idx+nan_len+1] for idx in idx_tot]).reshape([len(idx_tot)*6, ])
     mae_tot[i] = MAE(obs_tot, prd_tot)
 
-np.savez('D:/202010_energies/201126_MAEs.npz', mae_33=mae_33, mae_34=mae_34, mae_43=mae_43, mae_44=mae_44, mae_tot=mae_tot)
+np.savez('D:/202010_energies/201207_MAEs.npz', mae_33=mae_33, mae_34=mae_34, mae_43=mae_43, mae_44=mae_44, mae_tot=mae_tot)
+
+mae = np.load('D:/202010_energies/201207_MAEs.npz')
 
 print('* detected nor.')
 print(f' True negative {case_list}\n'
-      f'             = {mae_33}')
+      f'             = {mae["mae_33"]}')
 print(f'False negative {case_list}\n'
-      f'             = {mae_43}')
+      f'             = {mae["mae_43"]}')
 print('* detected acc. ')
 print(f'False positive {case_list}\n'
-      f'             = {mae_34}')
+      f'             = {mae["mae_34"]}')
 print(f' True positive {case_list}\n'
-      f'             = {mae_44}\n')
+      f'             = {mae["mae_44"]}\n')
 print(f'         TOTAL {case_list}\n'
-      f'             = {mae_tot}\n')
+      f'             = {mae["mae_tot"]}\n')
 
 
 # ############################################################
@@ -172,28 +144,28 @@ print(f'         TOTAL {case_list}\n'
 
 ##############################
 # Bar Chart
-mae = np.load('D:/202010_energies/201126_MAEs.npz')
+mae = np.load('D:/202010_energies/201207_MAEs.npz')
 # mae_tot = mae['mae_tot']
 cases = ['mae_33', 'mae_34', 'mae_43', 'mae_44', 'mae_tot']
 titles = ['True negative', 'False negative', 'False negative', 'True positive', 'Total']
 
 bar_width = 0.3
 alpha = 0.5
-# index = np.arange(4)
-index = np.arange(3)
+index = np.arange(4)
+# index = np.arange(3)
 
 for case in ['mae_34', 'mae_44', 'mae_tot']:
-    # mae_temp = mae[case]
-    # mae_vanilla = [mae_temp[x] for x in range(0, 12, 3)]
-    # mae_aod = [mae_temp[x+1] for x in range(0, 12, 3)]
-    # mae_aodsc = [mae_temp[x+2] for x in range(0, 12, 3)]
-    mae_temp = np.delete(mae[case], slice(6,9), 0)
-    mae_vanilla = [mae_temp[x] for x in range(0, 9, 3)]
-    mae_aod = [mae_temp[x+1] for x in range(0, 9, 3)]
-    mae_aodsc = [mae_temp[x+2] for x in range(0, 9, 3)]
+    mae_temp = mae[case]
+    mae_vanilla = [mae_temp[x] for x in range(0, 12, 3)]
+    mae_aod = [mae_temp[x+1] for x in range(0, 12, 3)]
+    mae_aodsc = [mae_temp[x+2] for x in range(0, 12, 3)]
+    # mae_temp = np.delete(mae[case], slice(6, 9), 0)
+    # mae_vanilla = [mae_temp[x] for x in range(0, 9, 3)]
+    # mae_aod = [mae_temp[x+1] for x in range(0, 9, 3)]
+    # mae_aodsc = [mae_temp[x+2] for x in range(0, 9, 3)]
 
     plt.rcParams.update({'font.size': 16})
-    plt.figure(figsize=(7,5), dpi=400)
+    plt.figure(figsize=(7,5), dpi=100)
     p1 = plt.bar(index-bar_width*0.5, mae_vanilla,
                  bar_width, color='r', alpha=alpha, label='Without AOD-AI')
     p2 = plt.bar(index + 0.5*bar_width, mae_aod,
@@ -204,26 +176,29 @@ for case in ['mae_34', 'mae_44', 'mae_tot']:
     # plt.title(titles[i])
     plt.ylabel('MAE [kW]', fontsize=18)
     plt.xlabel('Methods', fontsize=18)
-    plt.xticks(index, ['Joint', 'Linear', 'OWA'], fontsize=15)
+    plt.xticks(index, ['Joint', 'Linear', 'Spline', 'OWA'], fontsize=15)
+    plt.legend((p1[0], p2[0]), ('Without AOD-AI', 'With AOD-AI'), fontsize=15)
     # plt.legend((p1[0], p2[0], p3[0]), ('Vanilla', 'AOD', 'AOD-SC'), fontsize=15)
     if case == 'mae_34':
         plt.yticks(ticks=[y for y in np.arange(0.1, 0.35, 0.05)], labels=[np.round(y, 2) for y in np.arange(0.1, 0.35, 0.05)])
         plt.ylim([0.1, 0.325])
-    plt.legend((p1[0], p2[0]), ('Without AOD-AI', 'With AOD-AI'), fontsize=15)
+    elif case == 'mae_tot':
+        plt.ylim([0, 0.5])
+        plt.legend((p1[0], p2[0]), ('Without AOD-AI', 'With AOD-AI'), fontsize=15, loc='upper left')
     plt.tight_layout()
-    plt.savefig(f'Fig_{case}.pdf', dpi=None, facecolor='w', edgecolor='w',
-            orientation='portrait', papertype=None, format='pdf',
-            transparent=False, bbox_inches=None, pad_inches=0.1,
-            frameon=None, metadata=None)
+    # plt.savefig(f'Fig_{case}.pdf', dpi=None, facecolor='w', edgecolor='w',
+    #         orientation='portrait', papertype=None, format='pdf',
+    #         transparent=False, bbox_inches=None, pad_inches=0.1,
+    #         frameon=None, metadata=None)
 
 for case in ['mae_33', 'mae_43']:
-    # mae_temp = mae[case]
-    # mae_vanilla = [mae_temp[x] for x in range(0, 12, 3)]
-    mae_temp = np.delete(mae[case], slice(6,9), 0)
-    mae_vanilla = [mae_temp[x] for x in range(0, 9, 3)]
+    mae_temp = mae[case]
+    mae_vanilla = [mae_temp[x] for x in range(0, 12, 3)]
+    # mae_temp = np.delete(mae[case], slice(6,9), 0)
+    # mae_vanilla = [mae_temp[x] for x in range(0, 9, 3)]
 
     plt.rcParams.update({'font.size': 16})
-    plt.figure(figsize=(7,5), dpi=400)
+    plt.figure(figsize=(7,5), dpi=100)
     p1 = plt.bar(index, mae_vanilla,
                  bar_width*1.5, color='r', alpha=alpha, label='Without AOD-AI')
     # p2 = plt.bar(index + bar_width, mae_aod,
@@ -234,7 +209,7 @@ for case in ['mae_33', 'mae_43']:
     # plt.title(titles[i])
     plt.ylabel('MAE [kW]', fontsize=18)
     plt.xlabel('Methods', fontsize=18)
-    plt.xticks(index, ['Joint', 'Linear', 'OWA'], fontsize=15)
+    plt.xticks(index, ['Joint', 'Linear', 'Spline', 'OWA'], fontsize=15)
     # plt.legend((p1[0], p2[0], p3[0]), ('Vanilla', 'AOD', 'AOD-SC'), fontsize=15)
     if case == 'mae_33':
         # plt.yticks(ticks=[y for y in np.arange(0.1, 0.35, 0.05)], labels=[np.round(y, 2) for y in np.arange(0.1, 0.35, 0.05)])
@@ -243,10 +218,10 @@ for case in ['mae_33', 'mae_43']:
         plt.ylim([0, 0.5])
     plt.legend()
     plt.tight_layout()
-    plt.savefig(f'Fig_{case}.pdf', dpi=None, facecolor='w', edgecolor='w',
-            orientation='portrait', papertype=None, format='pdf',
-            transparent=False, bbox_inches=None, pad_inches=0.1,
-            frameon=None, metadata=None)
+    # plt.savefig(f'Fig_{case}.pdf', dpi=None, facecolor='w', edgecolor='w',
+    #         orientation='portrait', papertype=None, format='pdf',
+    #         transparent=False, bbox_inches=None, pad_inches=0.1,
+    #         frameon=None, metadata=None)
 
 
 ############################################################
@@ -287,9 +262,9 @@ idx_23h = idx+(24-h)
 # idx_23h = idx+(24-h)+6
 
 plt.rcParams.update({'font.size': 16})
-plt.figure(figsize=(8, 6), dpi=400)
+plt.figure(figsize=(8, 6), dpi=100)
 p_va = plt.plot(df['values'][idx_0h:idx_23h+1], '-bx', linewidth=2, markersize=10)
-# p_si = plt.plot(np.arange(idx+1,idx+nan_len+1), df['spline'][idx+1:idx+nan_len+1], ':c*', linewidth=2, markersize=16)
+p_si = plt.plot(np.arange(idx+1,idx+nan_len+1), df['spline'][idx+1:idx+nan_len+1], ':c*', linewidth=2, markersize=16)
 p_li = plt.plot(np.arange(idx+1,idx+nan_len+1), df['linear'][idx+1:idx+nan_len+1], ':gd', linewidth=2, markersize=12)
 p_ow = plt.plot(np.arange(idx+1,idx+nan_len+1), df['owa'][idx+1:idx+nan_len+1], '--mP', linewidth=2, markersize=12)
 p_jo = plt.plot(np.arange(idx+1,idx+nan_len+1), df['joint'][idx+1:idx+nan_len+1], '-ro', linewidth=2, markersize=10)
@@ -308,7 +283,7 @@ plt.xlim([x_str, x_end])
 plt.xlabel('Time [h]')
 plt.ylabel('Power [kW]')
 # plt.legend([p_va[0], p_jo[0], p_ow[0], p_li[0], p_si[0]], ['Observed data', 'Joint', 'OWA', 'Linear', 'Spline'])
-plt.legend([p_va[0], p_jo[0], p_ow[0], p_li[0]], ['Observed data', 'Joint', 'OWA', 'Linear'])
+plt.legend([p_va[0], p_jo[0], p_ow[0], p_li[0], p_si[0]], ['Observed data', 'Joint', 'OWA', 'Linear', 'Spline'])
 plt.tight_layout()
 plt.savefig('Fig_line_(a).pdf', dpi=None, facecolor='w', edgecolor='w',
             orientation='portrait', papertype=None, format='pdf',
@@ -356,12 +331,12 @@ idx_23h = idx+(24-h)
 # idx_23h = idx+(24-h)+6
 
 plt.rcParams.update({'font.size': 16})
-plt.figure(figsize=(8, 6), dpi=400)
+plt.figure(figsize=(8, 6), dpi=100)
 p_va = plt.plot(df['values'][idx_0h:idx_23h+1], '-bx', linewidth=2, markersize=12)
 p_jo = plt.plot(np.arange(idx,idx+nan_len+1), df['joint_aod'][idx:idx+nan_len+1], '-ro', linewidth=2, markersize=10)
 p_ow = plt.plot(np.arange(idx,idx+nan_len+1), df['owa_aod'][idx:idx+nan_len+1], '--mP', linewidth=2, markersize=12)
 p_li = plt.plot(np.arange(idx,idx+nan_len+1), df['linear_aod'][idx:idx+nan_len+1], ':gd', linewidth=2, markersize=12)
-# p_si = plt.plot(np.arange(idx,idx+nan_len+1), df['spline_aod'][idx:idx+nan_len+1], ':c*', linewidth=2, markersize=16)
+p_si = plt.plot(np.arange(idx,idx+nan_len+1), df['spline_aod'][idx:idx+nan_len+1], ':c*', linewidth=2, markersize=16)
 p_ou = plt.plot(idx, df['injected'][idx], 'ks', linewidth=.7, markersize=12)
 
 plt.plot([idx, idx], [0, 100], '--k', linewidth=.3)
@@ -379,10 +354,10 @@ plt.xlim([x_str, x_end])
 
 plt.xlabel('Time [h]')
 plt.ylabel('Power [kW]')
-# plt.legend([p_va[0], p_jo[0], p_ow[0], p_li[0], p_si[0], p_ou[0]],
-#            ['Observed data', 'Joint AOD-AI', 'OWA AOD-AI', 'Linear AOD-AI', 'Spline AOD-AI', 'Outlier'], loc='upper right')
-plt.legend([p_va[0], p_jo[0], p_ow[0], p_li[0], p_ou[0]],
-           ['Observed data', 'Joint AOD-AI', 'OWA AOD-AI', 'Linear AOD-AI', 'Outlier'], loc='upper right')
+plt.legend([p_va[0], p_jo[0], p_ow[0], p_li[0], p_si[0], p_ou[0]],
+           ['Observed data', 'Joint AOD-AI', 'OWA AOD-AI', 'Linear AOD-AI', 'Spline AOD-AI', 'Outlier'], loc='upper right')
+# plt.legend([p_va[0], p_jo[0], p_ow[0], p_li[0], p_ou[0]],
+#            ['Observed data', 'Joint AOD-AI', 'OWA AOD-AI', 'Linear AOD-AI', 'Outlier'], loc='upper right')
 plt.tight_layout()
 plt.savefig('Fig_line_(b).pdf', dpi=None, facecolor='w', edgecolor='w',
             orientation='portrait', papertype=None, format='pdf',
