@@ -136,24 +136,27 @@ for test_house in list_haveto:
         print(f'     * threshold test: {thld}')
 
     detection_result.to_csv(f'result_201113/201027_{test_house}_nan{nan_len}_lossfunc.csv')
-    detection_result = pd.read_csv(f'result_201113/201027_{test_house}_nan{nan_len}_lossfunc.csv', index_col=0)
+    # detection_result = pd.read_csv(f'D:/2020_ETRI/result_201113/201027_{test_house}_nan{nan_len}_lossfunc.csv', index_col=0)
+    detection_result = pd.read_csv(f'D:/2020_ETRI/result_201115_total-nearest//201027_{test_house}_nan{nan_len}_lossfunc.csv', index_col=0)
 
-    # plt.rcParams.update({'font.size': 14})
-    # plt.figure(figsize=(6,4), dpi=400)
-    # plt.plot(detection_result['thld'], detection_result['MAE'])
-    # plt.plot(detection_result['thld'], detection_result['MAE_no'])
-    # plt.axvline(x=detection_result['thld'][detection_result['MAE']==detection_result['MAE'].min()].values[0], color='r',
-    #             linewidth=1, linestyle='--')
-    # plt.legend(['w/ const.', 'w/o const.', 'threshold'], loc='lower right')
-    # plt.xlabel('z-score')
-    # plt.ylabel('total MAE')
-    # plt.xlim([0, 40])
+    # test_house = data_raw.columns[35]
+    # thld=7.8
+    plt.rcParams.update({'font.size': 15})
+    plt.figure(figsize=(6,4), dpi=400)
+    plt.plot(detection_result['thld'], detection_result['MAE'])
+    plt.plot(detection_result['thld'], detection_result['MAE_no'], linestyle='--')
+    plt.axvline(x=detection_result['thld'][detection_result['MAE']==detection_result['MAE'].min()].values[0], color='r',
+                linewidth=1, linestyle=':')
+    plt.legend(['w/ AOD-AI', 'w/o AOD-AI', 'selected'], loc='lower right', fontsize=14)
+    plt.xlabel('z-score threshold')
+    plt.ylabel('total MAE')
+    plt.xlim([0, 40])
     # plt.ylim([0.005, 0.03])
-    # # plt.ylim([0.006, 0.0225])
-    # # plt.title(f'{test_house}')
-    # plt.tight_layout()
-    # plt.savefig('Fig_loss.pdf')
-    # plt.savefig(f'result/{test_house}/201027_lossfunc_{test_house}_nan{nan_len}.png')
+    # plt.ylim([0.006, 0.0225])
+    # plt.title(f'{test_house}')
+    plt.tight_layout()
+    plt.savefig('Fig_loss.pdf')
+    # plt.savefig(f'result/{test_house}/201114_lossfunc_{test_house}_nan{nan_len}.png')
 
     # threshold = 7.5     # DEEPAR
     # threshold = 3.4   # NEAREST
