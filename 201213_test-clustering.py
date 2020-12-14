@@ -82,7 +82,11 @@ for house in house_list:
     result_km_v = np.append(result_km_v, result_km_v_temp)
     result_km_z = np.append(result_km_z, result_km_z_temp)
 
-    print(f'{house} FINISHED - elasped time {(time.time()-starttime):.3f} secs')
+    print(f'{house} FINISHED - elasped time {(time.time()-starttime):.3f} secs / {len(result_km_v_temp)}, {len(result_km_z_temp)} / {len(result_km_v)}, {len(result_km_z)} / {df_temp.shape[0]*(np.where(house_list==house)[0][0]+1)}')
+    if (len(result_km_v_temp)!=df_temp.shape[0])|(len(result_km_z_temp)!=df_temp.shape[0]):
+        print(f'\n     {house} SHOULD BE CHECKED\n')
+
+print(len(result_km_v), len(result_km_z))
 
 df['mask_detected_km_v'] = result_km_v
 df['mask_detected_km_z'] = result_km_z
