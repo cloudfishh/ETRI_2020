@@ -5,13 +5,13 @@ Anomaly detection with clustering
 Soyeong Park
 """
 import pandas as pd
-import matplotlib.pylab as plt
 import numpy as np
-from matplotlib import cm
-import seaborn as sns
+import time
 from sklearn.cluster import KMeans
-from sklearn.metrics import confusion_matrix
-import os
+# import matplotlib.pylab as plt
+# from matplotlib import cm
+# import seaborn as sns
+# from sklearn.metrics import confusion_matrix
 
 
 nan_len = 5
@@ -19,8 +19,61 @@ df = pd.read_csv('D:/202010_energies/201207_result_aodsc+owa_spline-rev-again.cs
 
 house_list = np.unique(df['house'].values.astype('str'))
 
-house = house_list[0]
+# house = house_list[0]
+# house = '68181c16'
 
+result_km_v = np.array([])
+result_km_z = np.array([])
 for house in house_list:
+    starttime = time.time()
     df_temp = df[df['house']==house]
 
+    cand_v = df_temp['values'][(df_temp['mask_inj'] == 3) | (df_temp['mask_inj'] == 4)].values
+    temp_v = np.array([np.zeros(cand_v.shape), cand_v]).transpose()
+    kmeans_v = KMeans(n_clusters=2).fit(temp_v)
+    label_km_v = kmeans_v.labels_
+
+    cand_z = df_temp['z_score'][(df_temp['mask_inj'] == 3) | (df_temp['mask_inj'] == 4)].values
+    temp_z = np.array([np.zeros(cand_z.shape), cand_z]).transpose()
+    kmeans_z = KMeans(n_clusters=2).fit(temp_z)
+    label_km_z = kmeans_z.labels_
+
+    # a = pd.DataFrame(np.array([cand_v, label_km_v]).transpose())
+    # b = a.sort_values(1).reset_index(drop=True)
+    # plt.figure()
+    # plt.plot(b[0], '.')
+    # plt.plot(b[1], '.')
+    #
+    #
+    # a = pd.DataFrame(np.array([cand_z, label_km_z]).transpose())
+    # b = a.sort_values(1).reset_index(drop=True)
+    # plt.figure()
+    # plt.plot(b[0], '.')
+    # plt.plot(b[1], '.')
+    # plt.ylim([-0.05, 5])
+
+    if cand_v[np.where(label_km_v==0)[0]].min() < cand_v[np.where(label_km_v==1)[0]].min():
+        km_v_nor = 0
+    else:
+        km_v_nor = 1
+    if cand_z[np.where(label_km_z == 0)[0]].min() < cand_z[np.where(label_km_z == 1)[0]].min():
+        km_z_nor = 0
+    else:
+        km_z_nor = 1
+
+    result_km_v_temp, result_km_z_temp = df_temp['mask_detected'].values.copy(), df_temp['mask_detected'].values.copy()
+    j = 0
+    for i in np.where((result_km_v_temp==3)|(result_km_v_temp==4))[0]:
+        result_km_v_temp[i] = 3 if label_km_v[j]==km_v_nor else 4
+        result_km_z_temp[i] = 3 if label_km_z[j]==km_z_nor else 4
+        j += 1
+
+    result_km_v = np.append(result_km_v, result_km_v_temp)
+    result_km_z = np.append(result_km_z, result_km_z_temp)
+
+    print(f'{house} FINISHED - elasped time {(time.time()-starttime):.3f} secs')
+
+df['mask_detected_km_v'] = result_km_v
+df['mask_detected_km_z'] = result_km_z
+
+df.to_csv('D:/202010_energies/201214_result_kmeans-added.csv')
