@@ -35,7 +35,7 @@ for house in house_list:
     kmeans_v = KMeans(n_clusters=2).fit(temp_v)
     label_km_v = kmeans_v.labels_
 
-    cand_z = df_temp['z_score'][(df_temp['mask_inj'] == 3) | (df_temp['mask_inj'] == 4)].values.nan_to_num(0)
+    cand_z = df_temp['z_score'][(df_temp['mask_inj'] == 3) | (df_temp['mask_inj'] == 4)].values
     cand_z = np.nan_to_num(cand_z)
     temp_z = np.array([np.zeros(cand_z.shape), cand_z]).transpose()
     kmeans_z = KMeans(n_clusters=2).fit(temp_z)
