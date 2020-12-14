@@ -20,7 +20,7 @@ df = pd.read_csv('D:/202010_energies/201207_result_aodsc+owa_spline-rev-again.cs
 house_list = np.unique(df['house'].values.astype('str'))
 
 # house = house_list[0]
-house = house_list[51]
+house = house_list[238]
 # house = '68181c16'
 
 result_km_v = np.array([])
@@ -37,6 +37,8 @@ for house in house_list:
 
     cand_z = df_temp['z_score'][(df_temp['mask_inj'] == 3) | (df_temp['mask_inj'] == 4)].values
     cand_z = np.nan_to_num(cand_z)
+    if sum(cand_z>10**100) > 0:
+        cand_z[np.where(cand_z > 10**100)[0]] = 50
     temp_z = np.array([np.zeros(cand_z.shape), cand_z]).transpose()
     kmeans_z = KMeans(n_clusters=2).fit(temp_z)
     label_km_z = kmeans_z.labels_
@@ -54,15 +56,21 @@ for house in house_list:
     # plt.plot(b[0], '.')
     # plt.plot(b[1], '.')
     # plt.ylim([-0.05, 5])
+    if (len(np.where(label_km_z==0)[0])==0)|len(np.where(label_km_z==1)[0]):
+        km_v_nor = 0 if len(np.where(label_km_z==1)[0])==0 else 1
+    else:
+        if cand_v[np.where(label_km_v==0)[0]].min() < cand_v[np.where(label_km_v==1)[0]].min():
+            km_v_nor = 0
+        else:
+            km_v_nor = 1
 
-    if cand_v[np.where(label_km_v==0)[0]].min() < cand_v[np.where(label_km_v==1)[0]].min():
-        km_v_nor = 0
+    if (len(np.where(label_km_z==0)[0])==0)|(len(np.where(label_km_z==1)[0])==0):
+        km_z_nor = 0 if len(np.where(label_km_z==1)[0])==0 else 1
     else:
-        km_v_nor = 1
-    if cand_z[np.where(label_km_z == 0)[0]].min() < cand_z[np.where(label_km_z == 1)[0]].min():
-        km_z_nor = 0
-    else:
-        km_z_nor = 1
+        if cand_z[np.where(label_km_z == 0)[0]].min() < cand_z[np.where(label_km_z == 1)[0]].min():
+            km_z_nor = 0
+        else:
+            km_z_nor = 1
 
     result_km_v_temp, result_km_z_temp = df_temp['mask_detected'].values.copy(), df_temp['mask_detected'].values.copy()
     j = 0
