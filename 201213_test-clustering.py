@@ -20,6 +20,7 @@ df = pd.read_csv('D:/202010_energies/201207_result_aodsc+owa_spline-rev-again.cs
 house_list = np.unique(df['house'].values.astype('str'))
 
 # house = house_list[0]
+house = house_list[51]
 # house = '68181c16'
 
 result_km_v = np.array([])
@@ -29,11 +30,13 @@ for house in house_list:
     df_temp = df[df['house']==house]
 
     cand_v = df_temp['values'][(df_temp['mask_inj'] == 3) | (df_temp['mask_inj'] == 4)].values
+    cand_v = np.nan_to_num(cand_v)
     temp_v = np.array([np.zeros(cand_v.shape), cand_v]).transpose()
     kmeans_v = KMeans(n_clusters=2).fit(temp_v)
     label_km_v = kmeans_v.labels_
 
-    cand_z = df_temp['z_score'][(df_temp['mask_inj'] == 3) | (df_temp['mask_inj'] == 4)].values
+    cand_z = df_temp['z_score'][(df_temp['mask_inj'] == 3) | (df_temp['mask_inj'] == 4)].values.nan_to_num(0)
+    cand_z = np.nan_to_num(cand_z)
     temp_z = np.array([np.zeros(cand_z.shape), cand_z]).transpose()
     kmeans_z = KMeans(n_clusters=2).fit(temp_z)
     label_km_z = kmeans_z.labels_
