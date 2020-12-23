@@ -18,6 +18,9 @@ nan_len = 5
 df = pd.read_csv('D:/202010_energies/201207_result_aodsc+owa_spline-rev-again.csv', index_col=0)
 
 house_list = np.unique(df['house'].values.astype('str'))
+a = np.unique(df['house'].values.astype('str'), return_index=True)
+aa = np.concatenate([a[0].reshape(len(a[0]),1), a[1].reshape(len(a[1]),1)], axis=1)
+np.argsort(aa[:,1])
 
 # house = house_list[0]
 house = house_list[238]
