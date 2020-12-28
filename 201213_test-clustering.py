@@ -17,13 +17,13 @@ from sklearn.cluster import KMeans
 nan_len = 5
 df = pd.read_csv('D:/202010_energies/201207_result_aodsc+owa_spline-rev-again.csv', index_col=0)
 
-house_list = np.unique(df['house'].values.astype('str'))
-a = np.unique(df['house'].values.astype('str'), return_index=True)
-aa = np.concatenate([a[0].reshape(len(a[0]),1), a[1].reshape(len(a[1]),1)], axis=1)
-np.argsort(aa[:,1])
+df = df.astype({'house': 'str'})
+
+h_list_raw = np.unique(df['house'].values.astype('str'), return_index=True)
+house_list = h_list_raw[0].astype('str')[np.argsort(h_list_raw[1])]
 
 # house = house_list[0]
-house = house_list[238]
+# house = house_list[238]
 # house = '68181c16'
 
 result_km_v = np.array([])
