@@ -50,7 +50,7 @@ for case in ['mask_detected_km_v', 'mask_detected']:
     plt.xlabel('Predicted label')
     plt.ylabel('True label')
     plt.tight_layout()
-    # plt.savefig(f'result/{test_house}/201017_confusion_{method[17:]}_{test_house}.png')
+    plt.savefig(f'201229_cm_{case}.png')
 
 
 # imputation 정확도도 비교

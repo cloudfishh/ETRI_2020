@@ -46,13 +46,13 @@ for house in house_list:
     kmeans_z = KMeans(n_clusters=2).fit(temp_z)
     label_km_z = kmeans_z.labels_
 
-    # a = pd.DataFrame(np.array([cand_v, label_km_v]).transpose())
-    # b = a.sort_values(1).reset_index(drop=True)
-    # plt.figure()
-    # plt.plot(b[0], '.')
-    # plt.plot(b[1], '.')
-    # plt.plot([0, len(label_km_v)], kmeans_v.cluster_centers_[:, 1], 'r*', markersize=8, markeredgecolor='k')
-    # plt.legend(['values', 'labels', 'centers'])
+    a = pd.DataFrame(np.array([cand_v, label_km_v]).transpose())
+    b = a.sort_values(1).reset_index(drop=True)
+    plt.figure()
+    plt.plot(b[0], '.')
+    plt.plot(b[1], '.')
+    plt.plot([0, len(label_km_v)], kmeans_v.cluster_centers_[:, 1], 'r*', markersize=8, markeredgecolor='k')
+    plt.legend(['values', 'labels', 'centers'])
     #
     #
     # a = pd.DataFrame(np.array([cand_z, label_km_z]).transpose())
