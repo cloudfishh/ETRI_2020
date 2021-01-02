@@ -1,0 +1,234 @@
+D:\PycharmProjects\TOC_PV\venv\Scripts\Scripts\Scripts\python.exe D:/PycharmProjects/ETRI_2020/210101_knn-improve.py
+INFO:root:Using CPU
+# of injected NaN = 296
+# of injected acc = 74      ** DONE
+RMSE - d6fd26b7 / # of good & bad - (1, 0)
+     k-NN : 0.5052956145203169
+   before : 0.5442797962644045
+
+# of injected NaN = 234
+# of injected acc = 58      ** DONE
+RMSE - 410b92b1 / # of good & bad - (1, 1)
+     k-NN : 0.1815085799340616
+   before : 0.16650970814334792
+
+# of injected NaN = 304
+# of injected acc = 76      ** DONE
+RMSE - 2c993de7 / # of good & bad - (1, 2)
+     k-NN : 0.21936055829615766
+   before : 0.1733032689429596
+
+# of injected NaN = 240
+# of injected acc = 60      ** DONE
+RMSE - 1243cee2 / # of good & bad - (1, 3)
+     k-NN : 0.1660769108456975
+   before : 0.15249244516805852
+
+# of injected NaN = 309
+# of injected acc = 77      ** DONE
+RMSE - b01fe23c / # of good & bad - (1, 4)
+     k-NN : 0.20640557744988267
+   before : 0.18334865190488805
+
+# of injected NaN = 260
+# of injected acc = 65      ** DONE
+RMSE - 28cf72fb / # of good & bad - (1, 5)
+     k-NN : 0.36106701908861016
+   before : 0.3058714662176808
+
+# of injected NaN = 305
+# of injected acc = 76      ** DONE
+RMSE - 6b5790f4 / # of good & bad - (1, 6)
+     k-NN : 0.3746932981871773
+   before : 0.2666491278385309
+
+# of injected NaN = 238
+# of injected acc = 59      ** DONE
+RMSE - 1338c9d0 / # of good & bad - (1, 7)
+     k-NN : 0.19065926874958555
+   before : 0.16462728466795185
+
+# of injected NaN = 290
+# of injected acc = 72      ** DONE
+RMSE - cbcc2b02 / # of good & bad - (1, 8)
+     k-NN : 0.21323624357410603
+   before : 0.19419968393738263
+
+# of injected NaN = 227
+# of injected acc = 56      ** DONE
+RMSE - f69df1a6 / # of good & bad - (1, 9)
+     k-NN : 0.21964639637257627
+   before : 0.18469196882381655
+
+# of injected NaN = 294
+# of injected acc = 73      ** DONE
+RMSE - aa71b3cb / # of good & bad - (1, 10)
+     k-NN : 0.3784844714443819
+   before : 0.24726318292995633
+
+# of injected NaN = 225
+# of injected acc = 56      ** DONE
+RMSE - 08ca25cc / # of good & bad - (2, 10)
+     k-NN : 0.15600234666542442
+   before : 0.17140080383579173
+
+# of injected NaN = 298
+# of injected acc = 74      ** DONE
+RMSE - 0583b3a6 / # of good & bad - (2, 11)
+     k-NN : 0.25600390553109403
+   before : 0.2436410193475738
+
+# of injected NaN = 234
+# of injected acc = 58      ** DONE
+RMSE - 11c1d3af / # of good & bad - (3, 11)
+     k-NN : 0.15750087395678225
+   before : 0.17518489621896022
+
+# of injected NaN = 290
+# of injected acc = 72      ** DONE
+RMSE - c5b2795b / # of good & bad - (4, 11)
+     k-NN : 0.26443498001018306
+   before : 0.3037787534283508
+
+# of injected NaN = 229
+# of injected acc = 57      ** DONE
+RMSE - 417407c0 / # of good & bad - (4, 12)
+     k-NN : 0.19381500904960527
+   before : 0.16955689748493324
+
+# of injected NaN = 315
+# of injected acc = 78      ** DONE
+RMSE - 949c8301 / # of good & bad - (4, 13)
+     k-NN : 0.3708493670997605
+   before : 0.27465430508475064
+
+# of injected NaN = 247
+# of injected acc = 61      ** DONE
+RMSE - 3b7d937e / # of good & bad - (4, 14)
+     k-NN : 0.255633558324172
+   before : 0.2089630461490032
+
+# of injected NaN = 291
+# of injected acc = 72      ** DONE
+RMSE - f3c1791c / # of good & bad - (5, 14)
+     k-NN : 0.08939901625817209
+   before : 0.13801899864241263
+
+# of injected NaN = 218
+# of injected acc = 54      ** DONE
+RMSE - 82c7ecbb / # of good & bad - (6, 14)
+     k-NN : 0.13390294772213562
+   before : 0.15296509765602556
+
+# of injected NaN = 299
+# of injected acc = 74      ** DONE
+RMSE - a11b248c / # of good & bad - (6, 15)
+     k-NN : 0.1924197757251257
+   before : 0.15626591691503833
+
+# of injected NaN = 235
+# of injected acc = 58      ** DONE
+RMSE - a625216e / # of good & bad - (6, 16)
+     k-NN : 0.1989825577410192
+   before : 0.17587795575099496
+
+# of injected NaN = 307
+# of injected acc = 76      ** DONE
+RMSE - b45961d4 / # of good & bad - (6, 17)
+     k-NN : 0.19839134523626503
+   before : 0.17049163438168105
+
+# of injected NaN = 247
+# of injected acc = 61      ** DONE
+RMSE - c2aaf22f / # of good & bad - (6, 18)
+     k-NN : 0.3029772712847961
+   before : 0.22920594314386708
+
+# of injected NaN = 291
+# of injected acc = 72      ** DONE
+RMSE - ed590bab / # of good & bad - (7, 18)
+     k-NN : 0.101577598071438
+   before : 0.11456842670921788
+
+# of injected NaN = 229
+# of injected acc = 57      ** DONE
+RMSE - 9bca65e1 / # of good & bad - (8, 18)
+     k-NN : 0.14307735069150987
+   before : 0.1484795135325565
+
+# of injected NaN = 297
+# of injected acc = 74      ** DONE
+RMSE - 8d3d1b3a / # of good & bad - (8, 19)
+     k-NN : 0.2647509961196109
+   before : 0.24380907554860487
+
+# of injected NaN = 227
+# of injected acc = 56      ** DONE
+RMSE - 248dc456 / # of good & bad - (8, 20)
+     k-NN : 0.46700746767859186
+   before : 0.3136676950332772
+
+# of injected NaN = 289
+# of injected acc = 72      ** DONE
+RMSE - 166fa275 / # of good & bad - (8, 21)
+     k-NN : 0.2348376986571516
+   before : 0.16508873570731422
+
+# of injected NaN = 224
+# of injected acc = 56      ** DONE
+RMSE - b2adba75 / # of good & bad - (8, 22)
+     k-NN : 0.1292122700389744
+   before : 0.11942634460500869
+
+# of injected NaN = 290
+# of injected acc = 72      ** DONE
+RMSE - fabefca4 / # of good & bad - (8, 23)
+     k-NN : 0.20655368128888693
+   before : 0.16352017696866056
+
+# of injected NaN = 230
+# of injected acc = 57      ** DONE
+RMSE - b6d9a31f / # of good & bad - (8, 24)
+     k-NN : 0.2045658555474866
+   before : 0.18475105459486027
+
+# of injected NaN = 290
+# of injected acc = 72      ** DONE
+RMSE - 6055591b / # of good & bad - (8, 25)
+     k-NN : 0.12214494626724674
+   before : 0.10368282204013787
+
+# of injected NaN = 229
+# of injected acc = 57      ** DONE
+RMSE - 7b26768a / # of good & bad - (8, 26)
+     k-NN : 0.24319787667169454
+   before : 0.20544725945900075
+
+# of injected NaN = 308
+# of injected acc = 77      ** DONE
+RMSE - 8514bb7f / # of good & bad - (8, 27)
+     k-NN : 0.25949944299916505
+   before : 0.25049737536536204
+
+# of injected NaN = 255
+# of injected acc = 63      ** DONE
+RMSE - 3ff845a6 / # of good & bad - (8, 28)
+     k-NN : 0.20119456088179544
+   before : 0.1507084056362211
+
+# of injected NaN = 290
+# of injected acc = 72      ** DONE
+RMSE - 8fd0851d / # of good & bad - (9, 28)
+     k-NN : 0.11431074024194245
+   before : 0.11531607239116384
+
+# of injected NaN = 228
+# of injected acc = 57      ** DONE
+RMSE - 848b73db / # of good & bad - (10, 28)
+     k-NN : 0.19183242983846663
+   before : 0.19379949848757372
+
+case good: ['d6fd26b7', '08ca25cc', '11c1d3af', 'c5b2795b', 'f3c1791c', '82c7ecbb', 'ed590bab', '9bca65e1', '8fd0851d', '848b73db']
+case bad: ['410b92b1', '2c993de7', '1243cee2', 'b01fe23c', '28cf72fb', '6b5790f4', '1338c9d0', 'cbcc2b02', 'f69df1a6', 'aa71b3cb', '0583b3a6', '417407c0', '949c8301', '3b7d937e', 'a11b248c', 'a625216e', 'b45961d4', 'c2aaf22f', '8d3d1b3a', '248dc456', '166fa275', 'b2adba75', 'fabefca4', 'b6d9a31f', '6055591b', '7b26768a', '8514bb7f', '3ff845a6']
+
+Process finished with exit code 0
