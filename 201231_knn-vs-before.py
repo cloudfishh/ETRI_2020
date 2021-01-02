@@ -43,6 +43,8 @@ for test_house in data.columns:
     print(f'     k-NN : {np.sqrt(np.mean(diff_near ** 2))}')
     print(f'   before : {np.sqrt(np.mean(diff_before ** 2))}\n')
 
+
+rmse_near = np.nan_to_num(np.array(rmse_near), 0)
 print('\n')
 print('TOTAL RMSE')
 print(f'     k-NN : {sum(rmse_near)/len(rmse_near)}')
