@@ -50,3 +50,6 @@ while (n_good<10)|(n_bad<10):
     print(f'   before : {rmse_before}\n')
 
     h += 1
+
+print(f'case good: {case_good}')
+print(f'case bad: {case_bad}')
