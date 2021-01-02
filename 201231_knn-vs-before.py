@@ -3,6 +3,7 @@ from funcs import *
 # test_house_list = ['68181c16', '1dcb5feb', '2ac64232', '3b218da6', '6a638b96']
 test_house = '68181c16'
 # test_house = '1dcb5feb'
+test_house = 'ab7a314a'
 
 data_raw = load_labeled()
 data, nan_data = clear_head(data_raw)
