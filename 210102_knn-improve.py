@@ -63,7 +63,8 @@ calendar = load_calendar(2017, 2019)
 test_house = case_bad[0]
 
 rmse_near, rmse_near_rev, rmse_before = [], [], []
-for test_house in case_bad:
+h = 0
+for test_house in data.columns:
     data_col = data[test_house]
     df = pd.DataFrame([], index=data_col.index)
     df['values'] = data_col.copy()
@@ -108,6 +109,14 @@ for test_house in case_bad:
     print(f'     k-NN : {np.sqrt(np.mean(diff_near ** 2))}')
     print(f' k-NN rev : {np.sqrt(np.mean(diff_near_rev ** 2))}')
     print(f'   before : {np.sqrt(np.mean(diff_before ** 2))}\n')
+    h += 1
+
+    if h % 50 == 0:
+        print('\n')
+        print(f'     중간점검 RMSE - ~{h}th')
+        print(f'          k-NN : {sum(rmse_near)/len(rmse_near)}')
+        print(f'      k-NN rev : {sum(rmse_near_rev)/len(rmse_near_rev)}')
+        print(f'        before : {sum(rmse_before)/len(rmse_before)}')
 
 
 rmse_near = np.nan_to_num(np.array(rmse_near), 0)
