@@ -35,7 +35,7 @@ def nearest_neighbor_rev(data_col, nan_mask, idx_target, calendar):
     if target_day < 30:
         target_data = data_day[target_hour, :target_day+30]
         target_mask = mask_day[target_hour, :target_day+30]
-    elif target_day > len(data_col)-30:
+    elif target_day > data_day.shape[1]-30:
         target_data = data_day[target_hour, target_day-30:]
         target_mask = mask_day[target_hour, target_day-30:]
     else:
@@ -73,7 +73,7 @@ for test_house in case_bad:
     df['org_idx'] = np.arange(0, len(data_col))
 
     nan_mask = df['nan']
-    idx_target = np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0][0]
+    idx_target = np.where((df['mask_inj'] == 3) | (df['mask_inj'] == 4))[0][101]
 
 
 
