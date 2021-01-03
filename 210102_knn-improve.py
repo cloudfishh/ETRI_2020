@@ -42,8 +42,9 @@ def nearest_neighbor_rev(data_col, nan_mask, idx_target, calendar):
         target_data = data_day[target_hour, target_day-30:target_day+30]
         target_mask = mask_day[target_hour, target_day-30:target_day+30]
 
-    target_mask_rev = np.invert(target_mask)
-    ma = np.ma.masked_array(target_data, mask=target_mask_rev)
+    # target_mask_rev = np.invert(target_mask)
+    # ma = np.ma.masked_array(target_data, mask=target_mask_rev)
+    ma = np.ma.masked_array(target_data, mask=target_mask)
     return np.array(ma.tolist()), ma.mean(), ma.std()
 
 
@@ -62,7 +63,7 @@ data_raw = load_labeled()
 data, nan_data = clear_head(data_raw)
 calendar = load_calendar(2017, 2019)
 
-test_house = case_bad[0]
+test_house = data.columns[0]
 
 rmse_near, rmse_near_rev, rmse_before = [], [], []
 h = 0
