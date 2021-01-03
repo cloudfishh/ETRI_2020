@@ -79,6 +79,7 @@ for test_house in house_list:
     print(f'***** {test_house} start')
     starttime = time.time()
     df = df_all[df_all['house'] == test_house]
+    df.index = df['Time']
     data_col = df['values']
 
     idx_list = np.where((df['mask_inj']==3)|(df['mask_inj']==4))[0]
