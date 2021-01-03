@@ -74,6 +74,7 @@ house_list = h_list_raw[0].astype('str')[np.argsort(h_list_raw[1])]
 # house = house_list[5]
 # house = house_list[238]
 # house = '68181c16'
+# test_house = '9178f459'
 
 for test_house in house_list:
     print(f'***** {test_house} start')
@@ -295,23 +296,39 @@ for test_house in house_list:
         temp_nocon, temp_const = spline['values'].copy(), spline['values'].copy()
         temp_nocon[:idx], temp_const[:idx] = spline['values'][:idx], spline['values'][:idx]
         temp_nocon[idx:idx + nan_len + 2], temp_const[idx:idx + nan_len + 2] = spline['injected'][idx:idx + nan_len + 2], spline['injected'][idx:idx + nan_len + 2]
-        # w/o const
-        p, q = 24, 24
-        spline['spline'][idx + 1:idx + nan_len + 1] = temp_nocon[idx - p:idx + nan_len + 2 + q].interpolate(method='spline', order=3).loc[idx + 1:idx + nan_len]
 
-        # w/ const
-        if spline['mask_detected'][idx] == 3:
+        if idx > 24:
+            # w/o const
             p, q = 24, 24
-            spline['spline_aod'][idx + 1:idx + nan_len + 1] = temp_const[idx - p:idx + nan_len + 2 + q].interpolate(method='spline', order=3).loc[idx + 1:idx + nan_len]
-            spline['spline_aodsc'][idx + 1:idx + nan_len + 1] = temp_const[idx - p:idx + nan_len + 2 + q].interpolate(method='spline', order=3).loc[idx + 1:idx + nan_len]
+            spline['spline'][idx + 1:idx + nan_len + 1] = temp_nocon[idx - p:idx + nan_len + 2 + q].interpolate(method='spline', order=3).loc[idx + 1:idx + nan_len]
 
-        else:  # 4
-            p, q = 24, 24
-            s = temp_const[idx]
-            temp_const[idx] = np.nan
-            li_temp = temp_const[idx - 1 - p:idx + nan_len + 2 + q].interpolate(method='spline', order=3).loc[idx:idx + nan_len]
-            spline['spline_aod'][idx:idx + nan_len + 1] = li_temp
-            spline['spline_aodsc'][idx:idx + nan_len + 1] = li_temp * (s / sum(li_temp.values))
+            # w/ const
+            if spline['mask_detected'][idx] == 3:
+                spline['spline_aod'][idx + 1:idx + nan_len + 1] = temp_const[idx - p:idx + nan_len + 2 + q].interpolate(method='spline', order=3).loc[idx + 1:idx + nan_len]
+                spline['spline_aodsc'][idx + 1:idx + nan_len + 1] = temp_const[idx - p:idx + nan_len + 2 + q].interpolate(method='spline', order=3).loc[idx + 1:idx + nan_len]
+
+            else:  # 4
+                s = temp_const[idx]
+                temp_const[idx] = np.nan
+                li_temp = temp_const[idx - 1 - p:idx + nan_len + 2 + q].interpolate(method='spline', order=3).loc[idx:idx + nan_len]
+                spline['spline_aod'][idx:idx + nan_len + 1] = li_temp
+                spline['spline_aodsc'][idx:idx + nan_len + 1] = li_temp * (s / sum(li_temp.values))
+        else:
+            # w/o const
+            p, q = 0, 0
+            spline['spline'][idx+1:idx+nan_len+1] = temp_nocon[idx-p:idx+nan_len+2+q].interpolate(method='linear').loc[idx+1:idx+nan_len]
+
+            # w/ const
+            if spline['mask_detected'][idx] == 3:
+                spline['spline_aod'][idx+1:idx+nan_len+1] = temp_const[idx-p:idx+nan_len+2+q].interpolate(method='linear').loc[idx+1:idx+nan_len]
+                spline['spline_aodsc'][idx+1:idx+nan_len+1] = temp_const[idx-p:idx+nan_len+2+q].interpolate(method='linear').loc[idx+1:idx+nan_len]
+
+            else:  # 4
+                s = temp_const[idx]
+                temp_const[idx] = np.nan
+                li_temp = temp_const[idx-1-p:idx+nan_len+2+q].interpolate(method='linear').loc[idx:idx+nan_len]
+                spline['spline_aod'][idx:idx+nan_len+1] = li_temp
+                spline['spline_aodsc'][idx:idx+nan_len+1] = li_temp*(s/sum(li_temp.values))
         print(f'{idx} ', end='')
 
     df['spline'] = spline['spline'].values.copy()
