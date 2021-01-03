@@ -239,6 +239,7 @@ for test_house in house_list:
     linear['linear'] = linear['injected'].copy()
     linear['linear_aod'] = linear['injected'].copy()
     linear['linear_aodsc'] = linear['injected'].copy()
+    linear = linear.reset_index()
 
     for idx in np.where((linear['mask_detected'] == 3) | (linear['mask_detected'] == 4))[0]:
         temp_nocon, temp_const = linear['values'].copy(), linear['values'].copy()
@@ -275,6 +276,7 @@ for test_house in house_list:
             linear['linear_aod'][idx:idx + nan_len + 1] = li_temp
             linear['linear_aodsc'][idx:idx + nan_len + 1] = li_temp * (s / sum(li_temp.values))
         print(f'{idx} ', end='')
+    linear.index = linear['Time']
 
     df['linear'] = linear['linear'].copy()
     df['linear_aod'] = linear['linear_aod'].copy()
